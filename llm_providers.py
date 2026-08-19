@@ -60,6 +60,15 @@ def _strip_think(raw: str) -> str:
     return re.sub(r'<think>.*?</think>', '', raw, flags=re.DOTALL)
 
 
+def _strip_think_full(raw: str) -> str:
+    """Remove <think>...</think> blocks and strip outer whitespace.
+    Safe for non-streaming full responses where the complete text is
+    available at once — .strip() is fine here since we're not mid-stream.
+    """
+    import re
+    return re.sub(r'<think>.*?</think>', '', raw, flags=re.DOTALL).strip()
+
+
 class LLMProvider:
     """
     Unified LLM provider with automatic fallback across AgentRouter, OpenRouter, and Groq.
