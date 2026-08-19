@@ -1749,7 +1749,9 @@ with tab_search:
                     rr = ClinicalReranker(top_n=top_k)
                     ranked = rr.rerank(query, results)
                     results = [
-                        {**r.model_dump(), "similarity": r.rerank_score if r.rerank_score is not None else r.vector_score}
+                        {**r.model_dump(), "vector_score": r.vector_score, "rerank_score": r.rerank_score,
+                         "original_text": r.content, "text": r.content,
+                         "similarity": r.vector_score if r.vector_score else r.rerank_score}
                         for r in ranked
                     ]
                 except Exception as e:
