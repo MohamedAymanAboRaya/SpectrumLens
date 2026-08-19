@@ -1205,7 +1205,7 @@ def _inject_citations(answer: str, chunks: List[Dict], query: str) -> str:
         text = (c.get("original_text") or c.get("text", "")).lower()
         # Extract key medical terms from chunk (3+ char words, no stopwords)
         terms = set(w for w in _re.findall(r'\b[a-z]{3,}\b', text)
-                    if w not in STOP and w not in {"the","and","for","with","that","this","are","was","has","have"})
+                    if w not in _STOP_WORDS and w not in {"the","and","for","with","that","this","are","was","has","have"})
         evidence_sigs.append({
             "terms": terms,
             "doc": c["document_name"],
