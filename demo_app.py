@@ -1748,7 +1748,10 @@ with tab_search:
                     from reranker import ClinicalReranker
                     rr = ClinicalReranker(top_n=top_k)
                     ranked = rr.rerank(query, results)
-                    results = [c for c in ranked]
+                    results = [
+                        {**r.model_dump(), "similarity": r.rerank_score if r.rerank_score is not None else r.vector_score}
+                        for r in ranked
+                    ]
                 except Exception as e:
                     st.warning(f"Reranker failed: {e} — using original ranking")
                 reranker_ms = (time.perf_counter()-t_r)*1000
