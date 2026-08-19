@@ -964,11 +964,12 @@ GENERATOR_PROMPT_AR = """أنت SpectrumLens، مساعد دعم القرار ا
 3. انسخ document_name, section_title, page بدقة من قطع الأدلة.
 4. إذا لم يدعم السياق الإجابة، قل إن الأدلة غير كافية.
 5. لا تقدم تشخيصاً أو علاجاً أو جرعات محددة للمريض.
+6. مهم جداً: استخدم مسافات واضحة بين الكلمات العربية. لا تدمج الكلمات معاً.
 
 تنسيق الإجابة (اتبع هذا التنسيق بالضبط — كل قسم في سطر منفصل):
 
 📋 **الإجابة**
-[2-5 جمل. إجابة مباشرة مبنية على الأدلة. كل جملة يجب أن تستشهد بمصدر باستخدام 【Source N】.]
+[2-5 جمل. إجابة مباشرة مبنية على الأدلة. كل جملة يجب أن تستشهد بمصدر باستخدام 【Source N】. تأكد من استخدام مسافات بين الكلمات.]
 
 📚 **الأدلة الداعمة**
 • 【Source 1】 اسم المستند — عنوان القسم (صفحة X) [chunk_id]
@@ -1076,7 +1077,7 @@ def _sanitize_chunk_text(t: str) -> str:
 
 
 def _sanitize_response(text: str) -> str:
-    """Strip LLM API error messages from response text."""
+    """Strip LLM API error messages from response text and fix Arabic spacing."""
     import re as _re
     if not text:
         return ""
@@ -1090,6 +1091,32 @@ def _sanitize_response(text: str) -> str:
     text = _re.sub(r'Inform the user\.[^\n]*', '', text, flags=_re.IGNORECASE)
     # Clean up multiple blank lines
     text = _re.sub(r'\n{3,}', '\n\n', text)
+    
+    # Fix Arabic spacing: add spaces between Arabic words when missing
+    def _fix_arabic_spacing(t: str) -> str:
+        """Add spaces between Arabic words when they're concatenated without spaces."""
+        arabic_pattern = r'[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]'
+        
+        def add_spaces(match):
+            arabic_text = match.group(0)
+            result = []
+            for i, char in enumerate(arabic_text):
+                result.append(char)
+                if i < len(arabic_text) - 1:
+                    next_char = arabic_text[i + 1]
+                    # Add space after common word-ending characters in Arabic
+                    # More aggressive spacing: add after most Arabic letters when followed by another letter
+                    if char in 'ةهياأؤإآبتثجحخدذرزسشصضطظعغفقكلمن' and next_char not in ' \n\t،؛؟.،':
+                        result.append(' ')
+            return ''.join(result)
+        
+        t = _re.sub(f'({arabic_pattern}{{3,}})', add_spaces, t)
+        
+        # Clean up multiple spaces that might have been added
+        t = _re.sub(r' +', ' ', t)
+        return t
+    
+    text = _fix_arabic_spacing(text)
     return text.strip()
 
 
@@ -1293,6 +1320,33 @@ def _render_citations_html(answer: str, chunks: List[Dict]) -> str:
     """Convert 【Source N】 and [SOURCE: ...] citations to clickable HTML links."""
     import re as _re
 
+    # Fix Arabic spacing: add spaces between Arabic words when missing
+    def _fix_arabic_spacing(text: str) -> str:
+        """Add spaces between Arabic words when they're concatenated without spaces."""
+        # Arabic letters range (basic Arabic + extended)
+        arabic_pattern = r'[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]'
+        
+        def add_spaces_to_arabic(match):
+            arabic_text = match.group(0)
+            # Simple heuristic: add space after common word-ending patterns
+            # This is a basic approach - for production, use a proper Arabic tokenizer
+            result = []
+            for i, char in enumerate(arabic_text):
+                result.append(char)
+                # Add space after certain characters that often end words in Arabic
+                if i < len(arabic_text) - 1:
+                    next_char = arabic_text[i + 1]
+                    # Word endings in Arabic: ة ه ي ا و
+                    if char in 'ةهياأؤإآ' and next_char not in ' \n\t،؛؟.،':
+                        result.append(' ')
+            return ''.join(result)
+        
+        # Apply to Arabic sequences longer than 4 chars
+        text = _re.sub(f'({arabic_pattern}{{5,}})', add_spaces_to_arabic, text)
+        return text
+
+    answer = _fix_arabic_spacing(answer)
+
     # Build source info map: index -> (doc, section, page, chunk_id, sim, excerpt)
     source_map = {}
     for i, c in enumerate(chunks):
@@ -1458,8 +1512,9 @@ def _render_structured_answer(raw: str, chunks: List[Dict]) -> str:
         letter-spacing:1px; margin-bottom:6px; padding-bottom:4px;
         border-bottom:1px solid #1a2332;
       }}
-      .llm-answer-text {{ color:#d4eaf8; line-height:1.85; font-size:0.92rem; }}
+      .llm-answer-text {{ color:#d4eaf8; line-height:1.85; font-size:0.92rem; white-space: pre-wrap; word-spacing: normal; letter-spacing: normal; }}
       .llm-answer-text p {{ margin:0 0 8px 0; }}
+      .llm-answer-text.rtl {{ direction: rtl; text-align: right; font-family: 'Noto Naskh Arabic', 'Inter', sans-serif; }}
       .conf-meter {{ background:#1a2332; border-radius:6px; height:6px; overflow:hidden; margin-top:4px; }}
       .conf-meter-fill {{ height:100%; border-radius:6px; transition:width 0.8s ease; }}
     </style>
@@ -1897,6 +1952,11 @@ with tab_search:
             else:
                 # Render structured answer with clean sections
                 answer_html = _render_structured_answer(full_answer, results)
+                # Also display plain text version for accessibility
+                st.markdown("### 📋 Clinical Answer (Plain Text)")
+                st.markdown(full_answer)
+                st.markdown("---")
+                st.markdown("### 📋 Clinical Answer (Formatted)")
                 st.markdown(f'<div class="answer-box">{answer_html}</div>', unsafe_allow_html=True)
                 # Copy button (plain text)
                 st.button("📋 Copy Answer", key=f"copy_{query[:20]}",

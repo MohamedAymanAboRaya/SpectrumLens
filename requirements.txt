@@ -4,10 +4,11 @@ tiktoken==0.6.0
 langchain-text-splitters==0.0.1
 
 # ─── Data Validation ─────────────────────────────────────────────────────────────
-pydantic==2.6.3
+pydantic>=2.6.3
+pydantic-core>=2.18.2
 
 # ─── Vector Database ─────────────────────────────────────────────────────────────
-supabase==2.3.0
+supabase>=2.3.0
 
 # ─── Embeddings ──────────────────────────────────────────────────────────────────
 # Primary: Jina AI API (jina-embeddings-v5, 1024-dim, free, 100+ languages)
@@ -36,3 +37,7 @@ streamlit>=1.32.0
 python-dotenv==1.0.1
 tenacity==8.2.3            # Retry logic for API calls
 pandas>=2.0.0              # Eval tables and data display
+
+# ─── HTTP Clients (for compatibility) ──────────────────────────────────────────
+httpx>=0.25.0
+h11>=0.16.0
