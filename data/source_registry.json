@@ -1,0 +1,170 @@
+{
+  "peds.2019-3449": {
+    "title": "Screening and Surveillance for Autism Spectrum Disorder",
+    "organization": "AAP",
+    "year": 2020,
+    "url": "https://publications.aap.org/pediatrics/article/146/1/e20193449/35270/Screening-and-Surveillance-for-Autism-Spectrum",
+    "authority_tier": 1
+  },
+  "identificationevaluationand_managementofchildrenwithautism_spectrumdisorder": {
+    "title": "Identification, Evaluation, and Management of Children with Autism Spectrum Disorder",
+    "organization": "AAP",
+    "year": 2020,
+    "url": "https://publications.aap.org/pediatrics/article/145/1/e20190750/34700",
+    "authority_tier": 1
+  },
+  "document": {
+    "title": "Autism Spectrum Disorder in Under 19s: Recognition, Referral and Diagnosis (NICE CG128)",
+    "organization": "NICE",
+    "year": 2017,
+    "url": "https://www.nice.org.uk/guidance/cg128",
+    "authority_tier": 1
+  },
+  "DSM5_TR_Official": {
+    "title": "Diagnostic and Statistical Manual of Mental Disorders, Fifth Edition, Text Revision",
+    "organization": "APA",
+    "year": 2022,
+    "url": "https://doi.org/10.1176/appi.books.9780890425756",
+    "authority_tier": 1
+  },
+  "CDC_ASD_Community_Report_2025": {
+    "title": "Community Report on Autism 2025",
+    "organization": "CDC",
+    "year": 2025,
+    "url": "https://www.cdc.gov/autism/community-report/index.html",
+    "authority_tier": 1
+  },
+  "WHO_ASD_Progress_Report_2017": {
+    "title": "Autism Spectrum Disorders: Progress Report",
+    "organization": "WHO",
+    "year": 2017,
+    "url": "https://www.who.int/publications/i/item/autism-spectrum-disorders",
+    "authority_tier": 1
+  },
+  "100_Day_Tool_Kit_School_Aged_Children_0": {
+    "title": "100 Day Kit for School-Age Children",
+    "organization": "Autism Speaks",
+    "year": 2023,
+    "url": "https://www.autismspeaks.org/100-day-kit-school-age-children",
+    "authority_tier": 2
+  },
+  "AIR-P_Research_Agenda": {
+    "title": "AIR-P Research Agenda",
+    "organization": "AUTISM SP",
+    "year": 2023,
+    "url": "https://www.autismspeaks.org/air-p-research-agenda",
+    "authority_tier": 2
+  },
+  "11102024  ABA for ASD Guidelines  For publication": {
+    "title": "ABA for ASD Guidelines",
+    "organization": "APBA",
+    "year": 2024,
+    "url": "",
+    "authority_tier": 2
+  },
+  "2021-surveillance-of-autism-nice-guidelines-cg128-cg142-and-cg170-pdf-11846121650629": {
+    "title": "Surveillance of Autism: NICE Guidelines CG128, CG142, CG170",
+    "organization": "NICE",
+    "year": 2021,
+    "url": "https://www.nice.org.uk/guidance/qs40",
+    "authority_tier": 1
+  },
+  "APBAwhitepaperABAinterventions": {
+    "title": "APBA White Paper on ABA Interventions",
+    "organization": "APBA",
+    "year": 2024,
+    "url": "",
+    "authority_tier": 2
+  },
+  "psychotropic-medication-prescribing-in-people-with-autism-spectrum-disorders-with-and-without-psychiatric-comorbidity": {
+    "title": "Psychotropic Medication Prescribing in ASD",
+    "organization": "Research",
+    "year": 2022,
+    "url": "",
+    "authority_tier": 3
+  },
+  "Eye-Tracking_Biomarkers_and_Autism_Diagnosis_in_Pr": {
+    "title": "Eye-Tracking Biomarkers and Autism Diagnosis in Practice",
+    "organization": "Research",
+    "year": 2024,
+    "url": "",
+    "authority_tier": 3
+  },
+  "antshel2016": {
+    "title": "ASD and ADHD Comorbidity: Clinical Management",
+    "organization": "Research",
+    "year": 2016,
+    "url": "",
+    "authority_tier": 3
+  },
+  "1842-Article Text-9814-1-10-20260303": {
+    "title": "AI in ASD Patients: A Narrative Review",
+    "organization": "Research",
+    "year": 2026,
+    "url": "",
+    "authority_tier": 3
+  },
+  "fpsyt-17-1917652": {
+    "title": "Autism Prevalence and Limits of Diagnostic Expansion",
+    "organization": "Frontiers",
+    "year": 2026,
+    "url": "",
+    "authority_tier": 3
+  },
+  "fpsyt-15-1408876": {
+    "title": "Pharmacotherapy for ADHD in Young Children with ASD",
+    "organization": "Frontiers",
+    "year": 2024,
+    "url": "",
+    "authority_tier": 3
+  },
+  "Experiences of receiving a diagnosis of autism spectrum disorder": {
+    "title": "Experiences of Receiving an ASD Diagnosis",
+    "organization": "Research",
+    "year": 2023,
+    "url": "",
+    "authority_tier": 3
+  },
+  "WHO_ASD_Comprehensive_Efforts_2014": {
+    "title": "Comprehensive Efforts on ASD",
+    "organization": "WHO",
+    "year": 2014,
+    "url": "https://www.who.int/publications/i/item/comprehensive-efforts-on-asd",
+    "authority_tier": 1
+  },
+  "ASD_Diagnostic_CPG_MetaAnalysis_2022": {
+    "title": "ASD Diagnostic CPG Meta-Analysis",
+    "organization": "Research",
+    "year": 2022,
+    "url": "",
+    "authority_tier": 3
+  },
+  "New_Advances_ASD_Diagnosis_Treatment_2024": {
+    "title": "New Advances in ASD Diagnosis and Treatment",
+    "organization": "Research",
+    "year": 2024,
+    "url": "",
+    "authority_tier": 3
+  },
+  "DSM5_ASD_Diagnostic_Criteria": {
+    "title": "DSM-5 ASD Diagnostic Criteria",
+    "organization": "APA",
+    "year": 2013,
+    "url": "https://doi.org/10.1176/appi.books.9780890425596",
+    "authority_tier": 1
+  },
+  "ASD_Screening_Diagnosis_Tools_MetaAnalysis_2024": {
+    "title": "ASD Screening and Diagnosis Tools Meta-Analysis",
+    "organization": "Research",
+    "year": 2024,
+    "url": "",
+    "authority_tier": 3
+  },
+  "peds.2019-3449": {
+    "title": "AAP Screening and Surveillance for ASD",
+    "organization": "AAP",
+    "year": 2020,
+    "url": "https://publications.aap.org/pediatrics/article/146/1/e20193449/35270",
+    "authority_tier": 1
+  }
+}

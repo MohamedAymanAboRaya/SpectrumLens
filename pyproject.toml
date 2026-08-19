@@ -1,0 +1,57 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.backends._legacy:_Backend"
+
+[project]
+name = "spectrumlens"
+version = "1.0.0"
+description = "Zero-hallucination ASD Clinical Decision Support System with Corrective RAG"
+readme = "README.md"
+license = {text = "Research Only"}
+requires-python = ">=3.10"
+dependencies = [
+    "PyMuPDF>=1.23.0",
+    "tiktoken>=0.6.0",
+    "langchain-text-splitters>=0.0.1",
+    "langchain-huggingface>=0.0.3",
+    "pydantic>=2.6.0",
+    "supabase>=2.3.0",
+    "sentence-transformers>=2.7.0",
+    "langdetect>=1.0.9",
+    "groq>=0.9.0",
+    "streamlit>=1.32.0",
+    "python-dotenv>=1.0.0",
+    "tenacity>=8.2.0",
+    "numpy>=1.24.0",
+    "pandas>=2.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-cov>=4.0.0",
+    "ruff>=0.4.0",
+    "mypy>=1.8.0",
+]
+cohere = [
+    "cohere>=4.57",
+]
+
+[tool.ruff]
+line-length = 120
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "W"]
+ignore = ["E501"]
+
+[tool.mypy]
+python_version = "3.10"
+warn_return_any = true
+warn_unused_configs = true
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+addopts = "-v --tb=short"

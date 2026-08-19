@@ -1,0 +1,8 @@
+2026-08-18 18:05:53,321 - INFO - Loading multilingual embedding model: BAAI/bge-m3 …
+2026-08-18 18:05:53,321 - INFO -   (First run will download ~2.27 GB — subsequent runs use cache)
+2026-08-18 18:05:53,321 - INFO - Load pretrained SentenceTransformer: BAAI/bge-m3
+2026-08-18 18:06:00,434 - INFO - Use pytorch device_name: cpu
+2026-08-18 18:06:00,442 - INFO - Multilingual embedding model ready ✅
+2026-08-18 18:06:00,442 - INFO - VectorDBManager connected to Supabase (BGE-M3, 1024-dim).
+2026-08-18 18:06:00,450 - INFO - Generating BGE-M3 embeddings for 453 chunks …
+Batches:   0%|          | 0/15 [00:00<?, ?it/s]

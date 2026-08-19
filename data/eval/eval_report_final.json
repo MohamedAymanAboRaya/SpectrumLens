@@ -1,0 +1,815 @@
+{
+  "timestamp": "2026-08-19T15:25:14",
+  "embedding_model": "paraphrase-multilingual-MiniLM-L12-v2 (384-dim)",
+  "total_queries": 50,
+  "metrics": {
+    "precision_at_3": 0.58,
+    "precision_at_5": 0.46,
+    "ndcg_at_5": 0.8737,
+    "recall_at_10": 1.2667,
+    "oos_refusal_rate": "100.0%",
+    "total_failures": 5
+  },
+  "per_query": [
+    {
+      "id": "F-001",
+      "category": "factual",
+      "difficulty": "easy",
+      "p3": 1.0,
+      "p5": 0.8,
+      "ndcg": 1.5706417189553201,
+      "recall": 2.0,
+      "failure": "✅ OK",
+      "lat_ms": 377.87894400025834,
+      "top_docs": [
+        "identificationevaluationand_managementof",
+        "peds.2019-3449",
+        "identificationevaluationand_managementof"
+      ]
+    },
+    {
+      "id": "F-002",
+      "category": "factual",
+      "difficulty": "easy",
+      "p3": 0.3333333333333333,
+      "p5": 0.4,
+      "ndcg": 0.8772153153380493,
+      "recall": 1.0,
+      "failure": "✅ OK",
+      "lat_ms": 286.1163249981473,
+      "top_docs": [
+        "identificationevaluationand_managementof",
+        "DSM5_ASD_Diagnostic_Criteria",
+        "DSM5_TR_Official"
+      ]
+    },
+    {
+      "id": "F-003",
+      "category": "factual",
+      "difficulty": "easy",
+      "p3": 1.0,
+      "p5": 0.8,
+      "ndcg": 1.5706417189553201,
+      "recall": 2.0,
+      "failure": "✅ OK",
+      "lat_ms": 282.42492099889205,
+      "top_docs": [
+        "peds.2019-3449",
+        "peds.2019-3449",
+        "identificationevaluationand_managementof"
+      ]
+    },
+    {
+      "id": "F-004",
+      "category": "factual",
+      "difficulty": "medium",
+      "p3": 0.6666666666666666,
+      "p5": 0.4,
+      "ndcg": 0.7653606369886217,
+      "recall": 0.6666666666666666,
+      "failure": "✅ OK",
+      "lat_ms": 319.11039099941263,
+      "top_docs": [
+        "2021-surveillance-of-autism-nice-guideli",
+        "2021-surveillance-of-autism-nice-guideli",
+        "NICE_CG128_Autism_Guidelines"
+      ]
+    },
+    {
+      "id": "F-005",
+      "category": "factual",
+      "difficulty": "medium",
+      "p3": 0.6666666666666666,
+      "p5": 0.4,
+      "ndcg": 0.6934264036172708,
+      "recall": 1.0,
+      "failure": "✅ OK",
+      "lat_ms": 328.68334500017227,
+      "top_docs": [
+        "New_Advances_ASD_Diagnosis_Treatment_202",
+        "Eye-Tracking_Biomarkers_and_Autism_Diagn",
+        "Eye-Tracking_Biomarkers_and_Autism_Diagn"
+      ]
+    },
+    {
+      "id": "F-006",
+      "category": "factual",
+      "difficulty": "medium",
+      "p3": 0.0,
+      "p5": 0.4,
+      "ndcg": 0.38364913903790027,
+      "recall": 0.6666666666666666,
+      "failure": "MISSING_SOURCE",
+      "lat_ms": 268.19466300003114,
+      "top_docs": [
+        "DSM5_TR_Official",
+        "DSM5_TR_Official",
+        "DSM5_ASD_Diagnostic_Criteria"
+      ]
+    },
+    {
+      "id": "F-007",
+      "category": "factual",
+      "difficulty": "medium",
+      "p3": 1.0,
+      "p5": 0.8,
+      "ndcg": 1.2021073465005474,
+      "recall": 1.3333333333333333,
+      "failure": "✅ OK",
+      "lat_ms": 317.54265800191206,
+      "top_docs": [
+        "11102024  ABA for ASD Guidelines  For pu",
+        "11102024  ABA for ASD Guidelines  For pu",
+        "identificationevaluationand_managementof"
+      ]
+    },
+    {
+      "id": "F-008",
+      "category": "factual",
+      "difficulty": "hard",
+      "p3": 0.6666666666666666,
+      "p5": 0.4,
+      "ndcg": 1.0,
+      "recall": 1.0,
+      "failure": "✅ OK",
+      "lat_ms": 255.63947000046028,
+      "top_docs": [
+        "identificationevaluationand_managementof",
+        "identificationevaluationand_managementof",
+        "psychotropic-medication-prescribing-in-p"
+      ]
+    },
+    {
+      "id": "F-009",
+      "category": "factual",
+      "difficulty": "hard",
+      "p3": 0.6666666666666666,
+      "p5": 0.4,
+      "ndcg": 0.7653606369886217,
+      "recall": 0.6666666666666666,
+      "failure": "✅ OK",
+      "lat_ms": 255.2536629991664,
+      "top_docs": [
+        "identificationevaluationand_managementof",
+        "identificationevaluationand_managementof",
+        "peds.2019-3449"
+      ]
+    },
+    {
+      "id": "F-010",
+      "category": "factual",
+      "difficulty": "hard",
+      "p3": 0.0,
+      "p5": 0.0,
+      "ndcg": 0.0,
+      "recall": 0.0,
+      "failure": "MISSING_SOURCE",
+      "lat_ms": 298.33899900040706,
+      "top_docs": [
+        "NICE_CG128_Autism_Guidelines",
+        "2021-surveillance-of-autism-nice-guideli",
+        "2021-surveillance-of-autism-nice-guideli"
+      ]
+    },
+    {
+      "id": "I-001",
+      "category": "inferential",
+      "difficulty": "medium",
+      "p3": 1.0,
+      "p5": 0.8,
+      "ndcg": 1.5706417189553201,
+      "recall": 2.0,
+      "failure": "✅ OK",
+      "lat_ms": 333.4917320025852,
+      "top_docs": [
+        "identificationevaluationand_managementof",
+        "peds.2019-3449",
+        "identificationevaluationand_managementof"
+      ]
+    },
+    {
+      "id": "I-002",
+      "category": "inferential",
+      "difficulty": "medium",
+      "p3": 0.6666666666666666,
+      "p5": 0.6,
+      "ndcg": 1.1837889117207785,
+      "recall": 1.5,
+      "failure": "✅ OK",
+      "lat_ms": 279.68013899953803,
+      "top_docs": [
+        "100_Day_Tool_Kit_School_Aged_Children_0",
+        "11102024  ABA for ASD Guidelines  For pu",
+        "identificationevaluationand_managementof"
+      ]
+    },
+    {
+      "id": "I-003",
+      "category": "inferential",
+      "difficulty": "hard",
+      "p3": 0.3333333333333333,
+      "p5": 0.4,
+      "ndcg": 0.6240505200038379,
+      "recall": 1.0,
+      "failure": "✅ OK",
+      "lat_ms": 371.81884500023443,
+      "top_docs": [
+        "identificationevaluationand_managementof",
+        "Eye-Tracking_Biomarkers_and_Autism_Diagn",
+        "ASD_Screening_Diagnosis_Tools_MetaAnalys"
+      ]
+    },
+    {
+      "id": "I-004",
+      "category": "inferential",
+      "difficulty": "hard",
+      "p3": 0.6666666666666666,
+      "p5": 0.4,
+      "ndcg": 0.7039180890341347,
+      "recall": 0.6666666666666666,
+      "failure": "✅ OK",
+      "lat_ms": 321.24659399778466,
+      "top_docs": [
+        "2021-surveillance-of-autism-nice-guideli",
+        "NICE_CG128_Autism_Guidelines",
+        "2021-surveillance-of-autism-nice-guideli"
+      ]
+    },
+    {
+      "id": "I-005",
+      "category": "inferential",
+      "difficulty": "hard",
+      "p3": 1.0,
+      "p5": 0.6,
+      "ndcg": 1.0,
+      "recall": 1.0,
+      "failure": "✅ OK",
+      "lat_ms": 283.98017899962724,
+      "top_docs": [
+        "identificationevaluationand_managementof",
+        "identificationevaluationand_managementof",
+        "11102024  ABA for ASD Guidelines  For pu"
+      ]
+    },
+    {
+      "id": "OOS-001",
+      "category": "out_of_scope",
+      "difficulty": "easy",
+      "p3": 0.0,
+      "p5": 0.0,
+      "ndcg": 0.0,
+      "recall": 1.0,
+      "failure": "NO_GT",
+      "lat_ms": 248.0598000001919,
+      "top_docs": [
+        "New_Advances_ASD_Diagnosis_Treatment_202",
+        "New_Advances_ASD_Diagnosis_Treatment_202",
+        "11102024  ABA for ASD Guidelines  For pu"
+      ]
+    },
+    {
+      "id": "OOS-002",
+      "category": "out_of_scope",
+      "difficulty": "easy",
+      "p3": 0.0,
+      "p5": 0.0,
+      "ndcg": 0.0,
+      "recall": 1.0,
+      "failure": "NO_GT",
+      "lat_ms": 259.52992800012,
+      "top_docs": [
+        "antshel2016",
+        "identificationevaluationand_managementof",
+        "100_Day_Tool_Kit_School_Aged_Children_0"
+      ]
+    },
+    {
+      "id": "OOS-003",
+      "category": "out_of_scope",
+      "difficulty": "medium",
+      "p3": 0.0,
+      "p5": 0.0,
+      "ndcg": 0.0,
+      "recall": 1.0,
+      "failure": "NO_GT",
+      "lat_ms": 270.0763860011648,
+      "top_docs": [
+        "DSM5_TR_Official",
+        "DSM5_ASD_Diagnostic_Criteria",
+        "DSM5_TR_Official"
+      ]
+    },
+    {
+      "id": "OOS-004",
+      "category": "out_of_scope",
+      "difficulty": "hard",
+      "p3": 0.0,
+      "p5": 0.0,
+      "ndcg": 0.0,
+      "recall": 1.0,
+      "failure": "NO_GT",
+      "lat_ms": 285.95336500075064,
+      "top_docs": [
+        "New_Advances_ASD_Diagnosis_Treatment_202",
+        "identificationevaluationand_managementof",
+        "New_Advances_ASD_Diagnosis_Treatment_202"
+      ]
+    },
+    {
+      "id": "OOS-005",
+      "category": "out_of_scope",
+      "difficulty": "hard",
+      "p3": 0.0,
+      "p5": 0.0,
+      "ndcg": 0.0,
+      "recall": 1.0,
+      "failure": "NO_GT",
+      "lat_ms": 372.24318199878326,
+      "top_docs": [
+        "identificationevaluationand_managementof",
+        "identificationevaluationand_managementof",
+        "1842-Article Text-9814-1-10-20260303"
+      ]
+    },
+    {
+      "id": "ADV-001",
+      "category": "adversarial",
+      "difficulty": "hard",
+      "p3": 0.0,
+      "p5": 0.4,
+      "ndcg": 0.38364913903790027,
+      "recall": 0.6666666666666666,
+      "failure": "MISSING_SOURCE",
+      "lat_ms": 351.47847500047646,
+      "top_docs": [
+        "DSM5_TR_Official",
+        "DSM5_ASD_Diagnostic_Criteria",
+        "DSM5_TR_Official"
+      ]
+    },
+    {
+      "id": "ADV-002",
+      "category": "adversarial",
+      "difficulty": "hard",
+      "p3": 1.0,
+      "p5": 1.0,
+      "ndcg": 1.3836491390379002,
+      "recall": 1.6666666666666667,
+      "failure": "✅ OK",
+      "lat_ms": 349.3492839988903,
+      "top_docs": [
+        "identificationevaluationand_managementof",
+        "ASD_Screening_Diagnosis_Tools_MetaAnalys",
+        "identificationevaluationand_managementof"
+      ]
+    },
+    {
+      "id": "ADV-003",
+      "category": "adversarial",
+      "difficulty": "hard",
+      "p3": 0.6666666666666666,
+      "p5": 0.4,
+      "ndcg": 0.6934264036172708,
+      "recall": 1.0,
+      "failure": "✅ OK",
+      "lat_ms": 306.89472499943804,
+      "top_docs": [
+        "New_Advances_ASD_Diagnosis_Treatment_202",
+        "Eye-Tracking_Biomarkers_and_Autism_Diagn",
+        "Eye-Tracking_Biomarkers_and_Autism_Diagn"
+      ]
+    },
+    {
+      "id": "ADV-004",
+      "category": "adversarial",
+      "difficulty": "hard",
+      "p3": 1.0,
+      "p5": 0.8,
+      "ndcg": 1.5706417189553201,
+      "recall": 2.0,
+      "failure": "✅ OK",
+      "lat_ms": 279.23617100168485,
+      "top_docs": [
+        "identificationevaluationand_managementof",
+        "identificationevaluationand_managementof",
+        "peds.2019-3449"
+      ]
+    },
+    {
+      "id": "ADV-005",
+      "category": "adversarial",
+      "difficulty": "medium",
+      "p3": 0.0,
+      "p5": 0.0,
+      "ndcg": 0.0,
+      "recall": 1.0,
+      "failure": "NO_GT",
+      "lat_ms": 280.04322099877754,
+      "top_docs": [
+        "identificationevaluationand_managementof",
+        "identificationevaluationand_managementof",
+        "peds.2019-3449"
+      ]
+    },
+    {
+      "id": "AR-001",
+      "category": "factual",
+      "difficulty": "easy",
+      "p3": 1.0,
+      "p5": 0.8,
+      "ndcg": 1.2021073465005474,
+      "recall": 1.3333333333333333,
+      "failure": "✅ OK",
+      "lat_ms": 282.13468000103603,
+      "top_docs": [
+        "identificationevaluationand_managementof",
+        "identificationevaluationand_managementof",
+        "peds.2019-3449"
+      ]
+    },
+    {
+      "id": "AR-002",
+      "category": "factual",
+      "difficulty": "medium",
+      "p3": 1.0,
+      "p5": 0.8,
+      "ndcg": 1.2021073465005474,
+      "recall": 1.3333333333333333,
+      "failure": "✅ OK",
+      "lat_ms": 267.3181280006247,
+      "top_docs": [
+        "DSM5_ASD_Diagnostic_Criteria",
+        "DSM5_TR_Official",
+        "DSM5_TR_Official"
+      ]
+    },
+    {
+      "id": "AR-003",
+      "category": "factual",
+      "difficulty": "medium",
+      "p3": 1.0,
+      "p5": 0.8,
+      "ndcg": 1.2021073465005474,
+      "recall": 1.3333333333333333,
+      "failure": "✅ OK",
+      "lat_ms": 271.38172299964936,
+      "top_docs": [
+        "identificationevaluationand_managementof",
+        "identificationevaluationand_managementof",
+        "psychotropic-medication-prescribing-in-p"
+      ]
+    },
+    {
+      "id": "AR-004",
+      "category": "inferential",
+      "difficulty": "hard",
+      "p3": 0.3333333333333333,
+      "p5": 0.2,
+      "ndcg": 0.38685280723454163,
+      "recall": 0.5,
+      "failure": "✅ OK",
+      "lat_ms": 349.4943760015303,
+      "top_docs": [
+        "identificationevaluationand_managementof",
+        "Eye-Tracking_Biomarkers_and_Autism_Diagn",
+        "ASD_Screening_Diagnosis_Tools_MetaAnalys"
+      ]
+    },
+    {
+      "id": "AR-005",
+      "category": "out_of_scope",
+      "difficulty": "easy",
+      "p3": 0.0,
+      "p5": 0.0,
+      "ndcg": 0.0,
+      "recall": 1.0,
+      "failure": "NO_GT",
+      "lat_ms": 363.33680199822993,
+      "top_docs": [
+        "identificationevaluationand_managementof",
+        "identificationevaluationand_managementof",
+        "New_Advances_ASD_Diagnosis_Treatment_202"
+      ]
+    },
+    {
+      "id": "AR-006",
+      "category": "factual",
+      "difficulty": "easy",
+      "p3": 1.0,
+      "p5": 0.8,
+      "ndcg": 1.5706417189553201,
+      "recall": 2.0,
+      "failure": "✅ OK",
+      "lat_ms": 282.83553999790456,
+      "top_docs": [
+        "identificationevaluationand_managementof",
+        "identificationevaluationand_managementof",
+        "peds.2019-3449"
+      ]
+    },
+    {
+      "id": "AR-007",
+      "category": "factual",
+      "difficulty": "medium",
+      "p3": 0.6666666666666666,
+      "p5": 0.4,
+      "ndcg": 1.0,
+      "recall": 1.0,
+      "failure": "✅ OK",
+      "lat_ms": 257.70298399947933,
+      "top_docs": [
+        "DSM5_ASD_Diagnostic_Criteria",
+        "DSM5_TR_Official",
+        "identificationevaluationand_managementof"
+      ]
+    },
+    {
+      "id": "AR-008",
+      "category": "factual",
+      "difficulty": "medium",
+      "p3": 0.3333333333333333,
+      "p5": 0.2,
+      "ndcg": 0.5,
+      "recall": 1.0,
+      "failure": "✅ OK",
+      "lat_ms": 287.6169880000816,
+      "top_docs": [
+        "identificationevaluationand_managementof",
+        "ASD_Screening_Diagnosis_Tools_MetaAnalys",
+        "Eye-Tracking_Biomarkers_and_Autism_Diagn"
+      ]
+    },
+    {
+      "id": "AR-009",
+      "category": "inferential",
+      "difficulty": "hard",
+      "p3": 0.3333333333333333,
+      "p5": 0.2,
+      "ndcg": 0.3065735963827292,
+      "recall": 0.5,
+      "failure": "✅ OK",
+      "lat_ms": 240.18347899982473,
+      "top_docs": [
+        "CDC_ASD_Community_Report_2025",
+        "11102024  ABA for ASD Guidelines  For pu",
+        "identificationevaluationand_managementof"
+      ]
+    },
+    {
+      "id": "AR-010",
+      "category": "adversarial",
+      "difficulty": "medium",
+      "p3": 0.0,
+      "p5": 0.0,
+      "ndcg": 0.0,
+      "recall": 0.0,
+      "failure": "MISSING_SOURCE",
+      "lat_ms": 275.3450290001638,
+      "top_docs": [
+        "identificationevaluationand_managementof",
+        "identificationevaluationand_managementof",
+        "New_Advances_ASD_Diagnosis_Treatment_202"
+      ]
+    },
+    {
+      "id": "AR-011",
+      "category": "factual",
+      "difficulty": "easy",
+      "p3": 0.3333333333333333,
+      "p5": 0.4,
+      "ndcg": 1.4306765580733931,
+      "recall": 2.0,
+      "failure": "✅ OK",
+      "lat_ms": 268.08325800084276,
+      "top_docs": [
+        "psychotropic-medication-prescribing-in-p",
+        "identificationevaluationand_managementof",
+        "identificationevaluationand_managementof"
+      ]
+    },
+    {
+      "id": "AR-012",
+      "category": "factual",
+      "difficulty": "medium",
+      "p3": 0.6666666666666666,
+      "p5": 0.4,
+      "ndcg": 1.5,
+      "recall": 2.0,
+      "failure": "✅ OK",
+      "lat_ms": 276.39157000157866,
+      "top_docs": [
+        "11102024  ABA for ASD Guidelines  For pu",
+        "APBAwhitepaperABAinterventions",
+        "11102024  ABA for ASD Guidelines  For pu"
+      ]
+    },
+    {
+      "id": "AR-013",
+      "category": "out_of_scope",
+      "difficulty": "easy",
+      "p3": 0.0,
+      "p5": 0.0,
+      "ndcg": 0.0,
+      "recall": 1.0,
+      "failure": "NO_GT",
+      "lat_ms": 234.79524800131912,
+      "top_docs": [
+        "WHO_ASD_Progress_Report_2017",
+        "WHO_ASD_Progress_Report_2017",
+        "fpsyt-15-1408876"
+      ]
+    },
+    {
+      "id": "AR-014",
+      "category": "inferential",
+      "difficulty": "hard",
+      "p3": 0.0,
+      "p5": 0.0,
+      "ndcg": 0.0,
+      "recall": 0.0,
+      "failure": "MISSING_SOURCE",
+      "lat_ms": 257.8376869969361,
+      "top_docs": [
+        "identificationevaluationand_managementof",
+        "identificationevaluationand_managementof",
+        "New_Advances_ASD_Diagnosis_Treatment_202"
+      ]
+    },
+    {
+      "id": "AR-015",
+      "category": "factual",
+      "difficulty": "medium",
+      "p3": 1.0,
+      "p5": 0.6,
+      "ndcg": 1.3065735963827294,
+      "recall": 1.5,
+      "failure": "✅ OK",
+      "lat_ms": 290.23495799992816,
+      "top_docs": [
+        "DSM5_TR_Official",
+        "DSM5_ASD_Diagnostic_Criteria",
+        "DSM5_TR_Official"
+      ]
+    },
+    {
+      "id": "NICE-001",
+      "category": "factual",
+      "difficulty": "medium",
+      "p3": 1.0,
+      "p5": 0.8,
+      "ndcg": 1.5706417189553201,
+      "recall": 2.0,
+      "failure": "✅ OK",
+      "lat_ms": 308.6163059997489,
+      "top_docs": [
+        "NICE_CG128_Autism_Guidelines",
+        "2021-surveillance-of-autism-nice-guideli",
+        "NICE_CG128_Autism_Guidelines"
+      ]
+    },
+    {
+      "id": "NICE-002",
+      "category": "factual",
+      "difficulty": "easy",
+      "p3": 1.0,
+      "p5": 0.8,
+      "ndcg": 1.5706417189553201,
+      "recall": 2.0,
+      "failure": "✅ OK",
+      "lat_ms": 266.6788019996602,
+      "top_docs": [
+        "NICE_CG128_Autism_Guidelines",
+        "NICE_CG128_Autism_Guidelines",
+        "2021-surveillance-of-autism-nice-guideli"
+      ]
+    },
+    {
+      "id": "NICE-003",
+      "category": "factual",
+      "difficulty": "medium",
+      "p3": 1.0,
+      "p5": 0.8,
+      "ndcg": 1.5706417189553201,
+      "recall": 2.0,
+      "failure": "✅ OK",
+      "lat_ms": 271.7332930005796,
+      "top_docs": [
+        "NICE_CG128_Autism_Guidelines",
+        "NICE_CG128_Autism_Guidelines",
+        "2021-surveillance-of-autism-nice-guideli"
+      ]
+    },
+    {
+      "id": "NICE-004",
+      "category": "factual",
+      "difficulty": "hard",
+      "p3": 1.0,
+      "p5": 0.8,
+      "ndcg": 1.5706417189553201,
+      "recall": 2.0,
+      "failure": "✅ OK",
+      "lat_ms": 266.65248200151836,
+      "top_docs": [
+        "2021-surveillance-of-autism-nice-guideli",
+        "2021-surveillance-of-autism-nice-guideli",
+        "NICE_CG128_Autism_Guidelines"
+      ]
+    },
+    {
+      "id": "NICE-005",
+      "category": "inferential",
+      "difficulty": "hard",
+      "p3": 1.0,
+      "p5": 0.8,
+      "ndcg": 1.5706417189553201,
+      "recall": 2.0,
+      "failure": "✅ OK",
+      "lat_ms": 288.7656689999858,
+      "top_docs": [
+        "NICE_CG128_Autism_Guidelines",
+        "2021-surveillance-of-autism-nice-guideli",
+        "2021-surveillance-of-autism-nice-guideli"
+      ]
+    },
+    {
+      "id": "NICE-006",
+      "category": "factual",
+      "difficulty": "easy",
+      "p3": 1.0,
+      "p5": 0.8,
+      "ndcg": 1.5706417189553201,
+      "recall": 2.0,
+      "failure": "✅ OK",
+      "lat_ms": 265.03621699885116,
+      "top_docs": [
+        "2021-surveillance-of-autism-nice-guideli",
+        "2021-surveillance-of-autism-nice-guideli",
+        "NICE_CG128_Autism_Guidelines"
+      ]
+    },
+    {
+      "id": "NICE-007",
+      "category": "factual",
+      "difficulty": "medium",
+      "p3": 1.0,
+      "p5": 0.8,
+      "ndcg": 1.5706417189553201,
+      "recall": 2.0,
+      "failure": "✅ OK",
+      "lat_ms": 287.6993800018681,
+      "top_docs": [
+        "NICE_CG128_Autism_Guidelines",
+        "NICE_CG128_Autism_Guidelines",
+        "2021-surveillance-of-autism-nice-guideli"
+      ]
+    },
+    {
+      "id": "NICE-008",
+      "category": "adversarial",
+      "difficulty": "medium",
+      "p3": 1.0,
+      "p5": 0.8,
+      "ndcg": 1.5706417189553201,
+      "recall": 2.0,
+      "failure": "✅ OK",
+      "lat_ms": 280.7152630011842,
+      "top_docs": [
+        "2021-surveillance-of-autism-nice-guideli",
+        "2021-surveillance-of-autism-nice-guideli",
+        "NICE_CG128_Autism_Guidelines"
+      ]
+    },
+    {
+      "id": "NICE-009",
+      "category": "factual",
+      "difficulty": "medium",
+      "p3": 1.0,
+      "p5": 0.8,
+      "ndcg": 1.5706417189553201,
+      "recall": 2.0,
+      "failure": "✅ OK",
+      "lat_ms": 259.29667400123435,
+      "top_docs": [
+        "NICE_CG128_Autism_Guidelines",
+        "NICE_CG128_Autism_Guidelines",
+        "2021-surveillance-of-autism-nice-guideli"
+      ]
+    },
+    {
+      "id": "NICE-010",
+      "category": "out_of_scope",
+      "difficulty": "easy",
+      "p3": 0.0,
+      "p5": 0.0,
+      "ndcg": 0.0,
+      "recall": 1.0,
+      "failure": "NO_GT",
+      "lat_ms": 264.1304799981299,
+      "top_docs": [
+        "NICE_CG128_Autism_Guidelines",
+        "NICE_CG128_Autism_Guidelines",
+        "2021-surveillance-of-autism-nice-guideli"
+      ]
+    }
+  ]
+}

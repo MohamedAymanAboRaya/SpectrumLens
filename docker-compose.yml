@@ -1,0 +1,30 @@
+version: "3.9"
+
+services:
+  spectrumlens:
+    build: .
+    container_name: spectrumlens
+    ports:
+      - "8501:8501"
+    env_file:
+      - .env
+    volumes:
+      - .:/app
+      - huggingface_cache:/root/.cache/huggingface
+    restart: unless-stopped
+
+  spectrumlens-demo:
+    build: .
+    container_name: spectrumlens-demo
+    ports:
+      - "8502:8501"
+    env_file:
+      - .env
+    volumes:
+      - .:/app
+      - huggingface_cache:/root/.cache/huggingface
+    entrypoint: ["streamlit", "run", "demo_app.py", "--server.port=8501", "--server.address=0.0.0.0"]
+    restart: unless-stopped
+
+volumes:
+  huggingface_cache:

@@ -1,0 +1,1204 @@
+{
+  "run_timestamp": "2026-08-19T12:56:52.178530Z",
+  "total_questions": 50,
+  "avg_precision_at_k": {
+    "3": 0.5666666666666667,
+    "5": 0.42800000000000005
+  },
+  "avg_recall_at_10": 0.6166666666666667,
+  "avg_ndcg_at_5": 0.8721013614691004,
+  "avg_citation_coverage": 0.76,
+  "safe_failure_rate": 1.0,
+  "verdict_accuracy": 1.0,
+  "by_category": {
+    "inferential": {
+      "count": 9,
+      "avg_p@3": 0.6666666666666666,
+      "avg_p@5": 0.48888888888888893,
+      "failures": []
+    },
+    "out_of_scope": {
+      "count": 8,
+      "avg_p@3": 0.0,
+      "avg_p@5": 0.0,
+      "failures": []
+    },
+    "adversarial": {
+      "count": 7,
+      "avg_p@3": 0.5238095238095238,
+      "avg_p@5": 0.3428571428571429,
+      "failures": []
+    },
+    "factual": {
+      "count": 26,
+      "avg_p@3": 0.717948717948718,
+      "avg_p@5": 0.5615384615384615,
+      "failures": [
+        "WRONG_TOPIC_SECTION (top section: 'Diagnostic Criteria: DSM-5')",
+        "WRONG_TOPIC_SECTION (top section: 'Screening by Age Group')",
+        "MISSING_SOURCE (retrieved 'identificationevaluationand_managementofchildrenwithautism_spectrumdisorder' instead of expected)"
+      ]
+    }
+  },
+  "by_difficulty": {
+    "easy": {
+      "count": 13,
+      "avg_p@3": 0.5384615384615384,
+      "avg_p@5": 0.4153846153846154
+    },
+    "medium": {
+      "count": 20,
+      "avg_p@3": 0.5833333333333333,
+      "avg_p@5": 0.45
+    },
+    "hard": {
+      "count": 17,
+      "avg_p@3": 0.5686274509803921,
+      "avg_p@5": 0.4117647058823529
+    }
+  },
+  "failure_modes": [
+    {
+      "id": "AR-007",
+      "category": "factual",
+      "difficulty": "medium",
+      "question": "ما هي معايير DSM-5 التشخيصية لاضطراب طيف التوحد؟",
+      "failure": "WRONG_TOPIC_SECTION (top section: 'Diagnostic Criteria: DSM-5')"
+    },
+    {
+      "id": "AR-008",
+      "category": "factual",
+      "difficulty": "medium",
+      "question": "كيف يقارن فحص المتابعة بالعيون مع M-CHAT-R/F في تشخيص التوحد المبكر؟",
+      "failure": "WRONG_TOPIC_SECTION (top section: 'Screening by Age Group')"
+    },
+    {
+      "id": "AR-015",
+      "category": "factual",
+      "difficulty": "medium",
+      "question": "ما هي مستويات خطورة DSM-5 الثلاثة للتوحد؟",
+      "failure": "MISSING_SOURCE (retrieved 'identificationevaluationand_managementofchildrenwithautism_spectrumdisorder' instead of expected)"
+    }
+  ],
+  "results": [
+    {
+      "item_id": "F-001",
+      "category": "factual",
+      "difficulty": "easy",
+      "question": "At what age does the AAP recommend universal ASD-specific screening for all children?",
+      "precision_at_k": {
+        "3": 1.0,
+        "5": 0.8
+      },
+      "retrieved_sources": [
+        "identificationevaluationand_managementofchildrenwithautism_spectrumdisorder",
+        "11102024  ABA for ASD Guidelines  For publication",
+        "peds.2019-3449"
+      ],
+      "predicted_verdict": "",
+      "correct_verdict": false,
+      "recall_at_10": 1.0,
+      "ndcg_at_5": 1.5706417189553201,
+      "citation_coverage": 1.0,
+      "latency_s": 1.82,
+      "failure_mode": null
+    },
+    {
+      "item_id": "F-002",
+      "category": "factual",
+      "difficulty": "easy",
+      "question": "What are the two core symptom domains required for an ASD diagnosis according to DSM-5?",
+      "precision_at_k": {
+        "3": 0.6666666666666666,
+        "5": 0.4
+      },
+      "retrieved_sources": [
+        "Eye-Tracking_Biomarkers_and_Autism_Diagnosis_in_Pr",
+        "100_Day_Tool_Kit_School_Aged_Children_0",
+        "identificationevaluationand_managementofchildrenwithautism_spectrumdisorder",
+        "DSM5_ASD_Diagnostic_Criteria"
+      ],
+      "predicted_verdict": "",
+      "correct_verdict": false,
+      "recall_at_10": 0.5,
+      "ndcg_at_5": 0.9197207891481876,
+      "citation_coverage": 1.0,
+      "latency_s": 0.66,
+      "failure_mode": null
+    },
+    {
+      "item_id": "F-003",
+      "category": "factual",
+      "difficulty": "easy",
+      "question": "What screening tool does the AAP recommend for ASD-specific screening at 18 and 24 months?",
+      "precision_at_k": {
+        "3": 0.6666666666666666,
+        "5": 0.6
+      },
+      "retrieved_sources": [
+        "identificationevaluationand_managementofchildrenwithautism_spectrumdisorder",
+        "11102024  ABA for ASD Guidelines  For publication",
+        "ASD_Screening_Diagnosis_Tools_MetaAnalysis_2024",
+        "peds.2019-3449"
+      ],
+      "predicted_verdict": "",
+      "correct_verdict": false,
+      "recall_at_10": 1.0,
+      "ndcg_at_5": 1.2371977127692964,
+      "citation_coverage": 1.0,
+      "latency_s": 0.75,
+      "failure_mode": null
+    },
+    {
+      "item_id": "F-004",
+      "category": "factual",
+      "difficulty": "medium",
+      "question": "What does NICE guideline CG128 recommend as the maximum wait time between referral and first appointment for ASD assessment?",
+      "precision_at_k": {
+        "3": 0.3333333333333333,
+        "5": 0.4
+      },
+      "retrieved_sources": [
+        "2021-surveillance-of-autism-nice-guidelines-cg128-cg142-and-cg170-pdf-11846121650629",
+        "11102024  ABA for ASD Guidelines  For publication",
+        "NICE_CG128_Autism_Guidelines"
+      ],
+      "predicted_verdict": "",
+      "correct_verdict": false,
+      "recall_at_10": 0.3333333333333333,
+      "ndcg_at_5": 0.6508205185601091,
+      "citation_coverage": 0.3333333333333333,
+      "latency_s": 0.83,
+      "failure_mode": null
+    },
+    {
+      "item_id": "F-005",
+      "category": "factual",
+      "difficulty": "medium",
+      "question": "According to the JAMA 2024 eye-tracking study, what specific gaze biomarker was most predictive of ASD diagnosis in pre-school children?",
+      "precision_at_k": {
+        "3": 0.6666666666666666,
+        "5": 0.4
+      },
+      "retrieved_sources": [
+        "Eye-Tracking_Biomarkers_and_Autism_Diagnosis_in_Pr",
+        "identificationevaluationand_managementofchildrenwithautism_spectrumdisorder",
+        "New_Advances_ASD_Diagnosis_Treatment_2024"
+      ],
+      "predicted_verdict": "",
+      "correct_verdict": false,
+      "recall_at_10": 0.5,
+      "ndcg_at_5": 1.0,
+      "citation_coverage": 1.0,
+      "latency_s": 0.75,
+      "failure_mode": null
+    },
+    {
+      "item_id": "F-006",
+      "category": "factual",
+      "difficulty": "medium",
+      "question": "What are the three DSM-5 severity levels for ASD and what do they indicate?",
+      "precision_at_k": {
+        "3": 0.6666666666666666,
+        "5": 0.4
+      },
+      "retrieved_sources": [
+        "WHO_ASD_Comprehensive_Efforts_2014",
+        "100_Day_Tool_Kit_School_Aged_Children_0",
+        "identificationevaluationand_managementofchildrenwithautism_spectrumdisorder",
+        "DSM5_ASD_Diagnostic_Criteria"
+      ],
+      "predicted_verdict": "",
+      "correct_verdict": false,
+      "recall_at_10": 0.6666666666666666,
+      "ndcg_at_5": 0.7653606369886217,
+      "citation_coverage": 1.0,
+      "latency_s": 0.76,
+      "failure_mode": null
+    },
+    {
+      "item_id": "F-007",
+      "category": "factual",
+      "difficulty": "medium",
+      "question": "What is the recommended maximum age for beginning Early Intensive Behavioral Intervention (EIBI) according to the clinical guidelines?",
+      "precision_at_k": {
+        "3": 1.0,
+        "5": 0.8
+      },
+      "retrieved_sources": [
+        "100_Day_Tool_Kit_School_Aged_Children_0",
+        "identificationevaluationand_managementofchildrenwithautism_spectrumdisorder",
+        "11102024  ABA for ASD Guidelines  For publication"
+      ],
+      "predicted_verdict": "",
+      "correct_verdict": false,
+      "recall_at_10": 0.6666666666666666,
+      "ndcg_at_5": 1.2021073465005474,
+      "citation_coverage": 0.6666666666666666,
+      "latency_s": 0.78,
+      "failure_mode": null
+    },
+    {
+      "item_id": "F-008",
+      "category": "factual",
+      "difficulty": "hard",
+      "question": "Which two FDA-approved medications are indicated for irritability associated with ASD, and what is the minimum age for each?",
+      "precision_at_k": {
+        "3": 0.6666666666666666,
+        "5": 0.4
+      },
+      "retrieved_sources": [
+        "psychotropic-medication-prescribing-in-people-with-autism-spectrum-disorders-with-and-without-psychiatric-comorbidity",
+        "identificationevaluationand_managementofchildrenwithautism_spectrumdisorder",
+        "fpsyt-15-1408876"
+      ],
+      "predicted_verdict": "",
+      "correct_verdict": false,
+      "recall_at_10": 1.0,
+      "ndcg_at_5": 1.0,
+      "citation_coverage": 1.0,
+      "latency_s": 0.74,
+      "failure_mode": null
+    },
+    {
+      "item_id": "F-009",
+      "category": "factual",
+      "difficulty": "hard",
+      "question": "What percentage of children with ASD also have an intellectual disability (ID) according to the AAP 2020 guidelines?",
+      "precision_at_k": {
+        "3": 0.6666666666666666,
+        "5": 0.4
+      },
+      "retrieved_sources": [
+        "identificationevaluationand_managementofchildrenwithautism_spectrumdisorder",
+        "CDC_ASD_Community_Report_2025",
+        "1842-Article Text-9814-1-10-20260303"
+      ],
+      "predicted_verdict": "",
+      "correct_verdict": false,
+      "recall_at_10": 0.3333333333333333,
+      "ndcg_at_5": 0.7653606369886217,
+      "citation_coverage": 1.0,
+      "latency_s": 0.72,
+      "failure_mode": null
+    },
+    {
+      "item_id": "F-010",
+      "category": "factual",
+      "difficulty": "hard",
+      "question": "According to the NICE CG128, what professional disciplines should form the core of a multidisciplinary ASD assessment team?",
+      "precision_at_k": {
+        "3": 0.3333333333333333,
+        "5": 0.4
+      },
+      "retrieved_sources": [
+        "psychotropic-medication-prescribing-in-people-with-autism-spectrum-disorders-with-and-without-psychiatric-comorbidity",
+        "2021-surveillance-of-autism-nice-guidelines-cg128-cg142-and-cg170-pdf-11846121650629",
+        "NICE_CG128_Autism_Guidelines"
+      ],
+      "predicted_verdict": "",
+      "correct_verdict": false,
+      "recall_at_10": 1.0,
+      "ndcg_at_5": 1.4306765580733931,
+      "citation_coverage": 1.0,
+      "latency_s": 0.88,
+      "failure_mode": null
+    },
+    {
+      "item_id": "I-001",
+      "category": "inferential",
+      "difficulty": "medium",
+      "question": "A 30-month-old child fails the M-CHAT-R/F screen. According to AAP guidelines, what is the recommended next step and target timeframe?",
+      "precision_at_k": {
+        "3": 0.6666666666666666,
+        "5": 0.4
+      },
+      "retrieved_sources": [
+        "2021-surveillance-of-autism-nice-guidelines-cg128-cg142-and-cg170-pdf-11846121650629",
+        "identificationevaluationand_managementofchildrenwithautism_spectrumdisorder",
+        "ASD_Screening_Diagnosis_Tools_MetaAnalysis_2024",
+        "100_Day_Tool_Kit_School_Aged_Children_0"
+      ],
+      "predicted_verdict": "",
+      "correct_verdict": false,
+      "recall_at_10": 1.0,
+      "ndcg_at_5": 1.0,
+      "citation_coverage": 1.0,
+      "latency_s": 0.74,
+      "failure_mode": null
+    },
+    {
+      "item_id": "I-002",
+      "category": "inferential",
+      "difficulty": "medium",
+      "question": "How does the 100 Day Kit recommend families prepare schools for a newly diagnosed ASD child?",
+      "precision_at_k": {
+        "3": 1.0,
+        "5": 0.8
+      },
+      "retrieved_sources": [
+        "100_Day_Tool_Kit_School_Aged_Children_0",
+        "identificationevaluationand_managementofchildrenwithautism_spectrumdisorder",
+        "NICE_CG128_Autism_Guidelines"
+      ],
+      "predicted_verdict": "",
+      "correct_verdict": false,
+      "recall_at_10": 1.0,
+      "ndcg_at_5": 1.5706417189553201,
+      "citation_coverage": 1.0,
+      "latency_s": 0.62,
+      "failure_mode": null
+    },
+    {
+      "item_id": "I-003",
+      "category": "inferential",
+      "difficulty": "hard",
+      "question": "Compare the clinical utility of eye-tracking biomarkers (JAMA 2024) versus the M-CHAT-R/F for ASD screening in children under 24 months. What are the key differences in sensitivity and clinical applicability?",
+      "precision_at_k": {
+        "3": 0.6666666666666666,
+        "5": 0.4
+      },
+      "retrieved_sources": [
+        "Eye-Tracking_Biomarkers_and_Autism_Diagnosis_in_Pr",
+        "identificationevaluationand_managementofchildrenwithautism_spectrumdisorder",
+        "11102024  ABA for ASD Guidelines  For publication"
+      ],
+      "predicted_verdict": "",
+      "correct_verdict": false,
+      "recall_at_10": 0.5,
+      "ndcg_at_5": 1.0,
+      "citation_coverage": 1.0,
+      "latency_s": 0.72,
+      "failure_mode": null
+    },
+    {
+      "item_id": "I-004",
+      "category": "inferential",
+      "difficulty": "hard",
+      "question": "A 7-year-old child in the UK has suspected ASD but the local CAMHS has a 9-month waiting list. What do NICE guidelines say about what should happen while the child waits?",
+      "precision_at_k": {
+        "3": 0.6666666666666666,
+        "5": 0.4
+      },
+      "retrieved_sources": [
+        "2021-surveillance-of-autism-nice-guidelines-cg128-cg142-and-cg170-pdf-11846121650629",
+        "11102024  ABA for ASD Guidelines  For publication",
+        "NICE_CG128_Autism_Guidelines"
+      ],
+      "predicted_verdict": "",
+      "correct_verdict": false,
+      "recall_at_10": 0.3333333333333333,
+      "ndcg_at_5": 0.7653606369886217,
+      "citation_coverage": 0.6666666666666666,
+      "latency_s": 0.75,
+      "failure_mode": null
+    },
+    {
+      "item_id": "I-005",
+      "category": "inferential",
+      "difficulty": "hard",
+      "question": "What evidence-based interventions does the AAP 2020 guideline recommend for ASD children with significant communication impairments, and what is the recommended intensity in hours per week?",
+      "precision_at_k": {
+        "3": 0.6666666666666666,
+        "5": 0.6
+      },
+      "retrieved_sources": [
+        "100_Day_Tool_Kit_School_Aged_Children_0",
+        "identificationevaluationand_managementofchildrenwithautism_spectrumdisorder",
+        "11102024  ABA for ASD Guidelines  For publication"
+      ],
+      "predicted_verdict": "",
+      "correct_verdict": false,
+      "recall_at_10": 0.6666666666666666,
+      "ndcg_at_5": 0.9674679834891693,
+      "citation_coverage": 1.0,
+      "latency_s": 0.89,
+      "failure_mode": null
+    },
+    {
+      "item_id": "OOS-001",
+      "category": "out_of_scope",
+      "difficulty": "easy",
+      "question": "What is the recommended treatment protocol for Type 2 diabetes in children?",
+      "precision_at_k": {
+        "3": 0.0,
+        "5": 0.0
+      },
+      "retrieved_sources": [
+        "New_Advances_ASD_Diagnosis_Treatment_2024",
+        "identificationevaluationand_managementofchildrenwithautism_spectrumdisorder",
+        "11102024  ABA for ASD Guidelines  For publication"
+      ],
+      "predicted_verdict": "SAFE_NO_ANSWER",
+      "correct_verdict": true,
+      "recall_at_10": 0.0,
+      "ndcg_at_5": 0.0,
+      "citation_coverage": 0.0,
+      "latency_s": 0.94,
+      "failure_mode": null
+    },
+    {
+      "item_id": "OOS-002",
+      "category": "out_of_scope",
+      "difficulty": "easy",
+      "question": "What medications are used to treat childhood ADHD?",
+      "precision_at_k": {
+        "3": 0.0,
+        "5": 0.0
+      },
+      "retrieved_sources": [
+        "psychotropic-medication-prescribing-in-people-with-autism-spectrum-disorders-with-and-without-psychiatric-comorbidity",
+        "100_Day_Tool_Kit_School_Aged_Children_0",
+        "identificationevaluationand_managementofchildrenwithautism_spectrumdisorder"
+      ],
+      "predicted_verdict": "SAFE_NO_ANSWER",
+      "correct_verdict": true,
+      "recall_at_10": 0.0,
+      "ndcg_at_5": 0.0,
+      "citation_coverage": 0.0,
+      "latency_s": 0.83,
+      "failure_mode": null
+    },
+    {
+      "item_id": "OOS-003",
+      "category": "out_of_scope",
+      "difficulty": "medium",
+      "question": "What is the DSM-5 diagnostic criteria for Schizophrenia?",
+      "precision_at_k": {
+        "3": 0.0,
+        "5": 0.0
+      },
+      "retrieved_sources": [
+        "100_Day_Tool_Kit_School_Aged_Children_0",
+        "identificationevaluationand_managementofchildrenwithautism_spectrumdisorder",
+        "DSM5_TR_Official"
+      ],
+      "predicted_verdict": "SAFE_NO_ANSWER",
+      "correct_verdict": true,
+      "recall_at_10": 0.0,
+      "ndcg_at_5": 0.0,
+      "citation_coverage": 0.0,
+      "latency_s": 0.8,
+      "failure_mode": null
+    },
+    {
+      "item_id": "OOS-004",
+      "category": "out_of_scope",
+      "difficulty": "hard",
+      "question": "How does the gut microbiome influence ASD symptom severity and what probiotic interventions are recommended?",
+      "precision_at_k": {
+        "3": 0.0,
+        "5": 0.0
+      },
+      "retrieved_sources": [
+        "psychotropic-medication-prescribing-in-people-with-autism-spectrum-disorders-with-and-without-psychiatric-comorbidity",
+        "100_Day_Tool_Kit_School_Aged_Children_0",
+        "identificationevaluationand_managementofchildrenwithautism_spectrumdisorder"
+      ],
+      "predicted_verdict": "SAFE_NO_ANSWER",
+      "correct_verdict": true,
+      "recall_at_10": 0.0,
+      "ndcg_at_5": 0.0,
+      "citation_coverage": 0.0,
+      "latency_s": 0.76,
+      "failure_mode": null
+    },
+    {
+      "item_id": "OOS-005",
+      "category": "out_of_scope",
+      "difficulty": "hard",
+      "question": "What is the genetic etiology of Rett syndrome and how does it differ from ASD at the molecular level?",
+      "precision_at_k": {
+        "3": 0.0,
+        "5": 0.0
+      },
+      "retrieved_sources": [
+        "New_Advances_ASD_Diagnosis_Treatment_2024",
+        "antshel2016",
+        "identificationevaluationand_managementofchildrenwithautism_spectrumdisorder",
+        "psychotropic-medication-prescribing-in-people-with-autism-spectrum-disorders-with-and-without-psychiatric-comorbidity"
+      ],
+      "predicted_verdict": "SAFE_NO_ANSWER",
+      "correct_verdict": true,
+      "recall_at_10": 0.0,
+      "ndcg_at_5": 0.0,
+      "citation_coverage": 0.0,
+      "latency_s": 0.76,
+      "failure_mode": null
+    },
+    {
+      "item_id": "ADV-001",
+      "category": "adversarial",
+      "difficulty": "hard",
+      "question": "Based on the clinical guidelines, does a child who meets DSM-5 Criterion A but not Criterion B qualify for an ASD diagnosis?",
+      "precision_at_k": {
+        "3": 0.6666666666666666,
+        "5": 0.4
+      },
+      "retrieved_sources": [
+        "psychotropic-medication-prescribing-in-people-with-autism-spectrum-disorders-with-and-without-psychiatric-comorbidity",
+        "identificationevaluationand_managementofchildrenwithautism_spectrumdisorder",
+        "11102024  ABA for ASD Guidelines  For publication"
+      ],
+      "predicted_verdict": "SAFE_NO_ANSWER",
+      "correct_verdict": true,
+      "recall_at_10": 0.3333333333333333,
+      "ndcg_at_5": 0.7653606369886217,
+      "citation_coverage": 0.6666666666666666,
+      "latency_s": 0.73,
+      "failure_mode": null
+    },
+    {
+      "item_id": "ADV-002",
+      "category": "adversarial",
+      "difficulty": "hard",
+      "question": "Can a clinician diagnose ASD in a child based solely on a failed M-CHAT-R/F screen without further evaluation?",
+      "precision_at_k": {
+        "3": 1.0,
+        "5": 0.8
+      },
+      "retrieved_sources": [
+        "identificationevaluationand_managementofchildrenwithautism_spectrumdisorder",
+        "ASD_Screening_Diagnosis_Tools_MetaAnalysis_2024",
+        "NICE_CG128_Autism_Guidelines"
+      ],
+      "predicted_verdict": "SAFE_NO_ANSWER",
+      "correct_verdict": true,
+      "recall_at_10": 0.6666666666666666,
+      "ndcg_at_5": 1.2021073465005474,
+      "citation_coverage": 1.0,
+      "latency_s": 0.98,
+      "failure_mode": null
+    },
+    {
+      "item_id": "ADV-003",
+      "category": "adversarial",
+      "difficulty": "hard",
+      "question": "Is eye-tracking technology currently approved for clinical ASD diagnosis instead of behavioral assessment?",
+      "precision_at_k": {
+        "3": 0.6666666666666666,
+        "5": 0.4
+      },
+      "retrieved_sources": [
+        "Eye-Tracking_Biomarkers_and_Autism_Diagnosis_in_Pr",
+        "identificationevaluationand_managementofchildrenwithautism_spectrumdisorder",
+        "New_Advances_ASD_Diagnosis_Treatment_2024"
+      ],
+      "predicted_verdict": "SAFE_NO_ANSWER",
+      "correct_verdict": true,
+      "recall_at_10": 0.5,
+      "ndcg_at_5": 1.0,
+      "citation_coverage": 1.0,
+      "latency_s": 0.63,
+      "failure_mode": null
+    },
+    {
+      "item_id": "ADV-004",
+      "category": "adversarial",
+      "difficulty": "hard",
+      "question": "Should parents wait until after age 3 to seek ASD evaluation since most children are not diagnosed until then?",
+      "precision_at_k": {
+        "3": 0.6666666666666666,
+        "5": 0.4
+      },
+      "retrieved_sources": [
+        "100_Day_Tool_Kit_School_Aged_Children_0",
+        "identificationevaluationand_managementofchildrenwithautism_spectrumdisorder",
+        "NICE_CG128_Autism_Guidelines"
+      ],
+      "predicted_verdict": "SAFE_NO_ANSWER",
+      "correct_verdict": true,
+      "recall_at_10": 1.0,
+      "ndcg_at_5": 1.0,
+      "citation_coverage": 1.0,
+      "latency_s": 0.69,
+      "failure_mode": null
+    },
+    {
+      "item_id": "ADV-005",
+      "category": "adversarial",
+      "difficulty": "medium",
+      "question": "What is the cure for autism spectrum disorder recommended by the AAP?",
+      "precision_at_k": {
+        "3": 0.0,
+        "5": 0.0
+      },
+      "retrieved_sources": [
+        "ASD_Diagnostic_CPG_MetaAnalysis_2022",
+        "2021-surveillance-of-autism-nice-guidelines-cg128-cg142-and-cg170-pdf-11846121650629",
+        "identificationevaluationand_managementofchildrenwithautism_spectrumdisorder",
+        "WHO_ASD_Comprehensive_Efforts_2014"
+      ],
+      "predicted_verdict": "SAFE_NO_ANSWER",
+      "correct_verdict": true,
+      "recall_at_10": 0.0,
+      "ndcg_at_5": 0.0,
+      "citation_coverage": 0.0,
+      "latency_s": 0.72,
+      "failure_mode": null
+    },
+    {
+      "item_id": "AR-001",
+      "category": "factual",
+      "difficulty": "easy",
+      "question": "في أي عمر توصي جمعية AAP بإجراء فحص التوحد الشامل للأطفال؟",
+      "precision_at_k": {
+        "3": 1.0,
+        "5": 0.8
+      },
+      "retrieved_sources": [
+        "identificationevaluationand_managementofchildrenwithautism_spectrumdisorder",
+        "ASD_Screening_Diagnosis_Tools_MetaAnalysis_2024",
+        "peds.2019-3449"
+      ],
+      "predicted_verdict": "",
+      "correct_verdict": false,
+      "recall_at_10": 0.6666666666666666,
+      "ndcg_at_5": 1.2021073465005474,
+      "citation_coverage": 0.6666666666666666,
+      "latency_s": 1.08,
+      "failure_mode": null
+    },
+    {
+      "item_id": "AR-002",
+      "category": "factual",
+      "difficulty": "medium",
+      "question": "ما هي الأعراض الرئيسية لاضطراب طيف التوحد وفقًا لمعايير DSM-5؟",
+      "precision_at_k": {
+        "3": 0.6666666666666666,
+        "5": 0.6
+      },
+      "retrieved_sources": [
+        "WHO_ASD_Comprehensive_Efforts_2014",
+        "100_Day_Tool_Kit_School_Aged_Children_0",
+        "identificationevaluationand_managementofchildrenwithautism_spectrumdisorder",
+        "DSM5_ASD_Diagnostic_Criteria"
+      ],
+      "predicted_verdict": "",
+      "correct_verdict": false,
+      "recall_at_10": 0.6666666666666666,
+      "ndcg_at_5": 0.9469024295259745,
+      "citation_coverage": 1.0,
+      "latency_s": 0.97,
+      "failure_mode": null
+    },
+    {
+      "item_id": "AR-003",
+      "category": "factual",
+      "difficulty": "medium",
+      "question": "ما هي الأدوية التي وافقت عليها إدارة الغذاء والدواء FDA لعلاج اضطراب طيف التوحد؟",
+      "precision_at_k": {
+        "3": 1.0,
+        "5": 0.8
+      },
+      "retrieved_sources": [
+        "psychotropic-medication-prescribing-in-people-with-autism-spectrum-disorders-with-and-without-psychiatric-comorbidity",
+        "ASD_Diagnostic_CPG_MetaAnalysis_2022",
+        "identificationevaluationand_managementofchildrenwithautism_spectrumdisorder"
+      ],
+      "predicted_verdict": "",
+      "correct_verdict": false,
+      "recall_at_10": 1.0,
+      "ndcg_at_5": 1.2021073465005474,
+      "citation_coverage": 1.0,
+      "latency_s": 1.28,
+      "failure_mode": null
+    },
+    {
+      "item_id": "AR-004",
+      "category": "inferential",
+      "difficulty": "hard",
+      "question": "كيف تقارن تقنية تتبع العين (JAMA 2024) بأداة M-CHAT-R/F في الكشف المبكر عن التوحد؟ ما أوجه الاختلاف الرئيسية في الحساسية والتطبيق السريري؟",
+      "precision_at_k": {
+        "3": 0.6666666666666666,
+        "5": 0.4
+      },
+      "retrieved_sources": [
+        "Eye-Tracking_Biomarkers_and_Autism_Diagnosis_in_Pr",
+        "identificationevaluationand_managementofchildrenwithautism_spectrumdisorder",
+        "New_Advances_ASD_Diagnosis_Treatment_2024",
+        "ASD_Screening_Diagnosis_Tools_MetaAnalysis_2024"
+      ],
+      "predicted_verdict": "",
+      "correct_verdict": false,
+      "recall_at_10": 0.5,
+      "ndcg_at_5": 1.0,
+      "citation_coverage": 1.0,
+      "latency_s": 1.44,
+      "failure_mode": null
+    },
+    {
+      "item_id": "AR-005",
+      "category": "out_of_scope",
+      "difficulty": "easy",
+      "question": "ما علاج اضطراب التوحد النهائي والشافي تمامًا وفقًا للإرشادات الطبية؟",
+      "precision_at_k": {
+        "3": 0.0,
+        "5": 0.0
+      },
+      "retrieved_sources": [
+        "100_Day_Tool_Kit_School_Aged_Children_0",
+        "identificationevaluationand_managementofchildrenwithautism_spectrumdisorder",
+        "NICE_CG128_Autism_Guidelines"
+      ],
+      "predicted_verdict": "SAFE_NO_ANSWER",
+      "correct_verdict": true,
+      "recall_at_10": 0.0,
+      "ndcg_at_5": 0.0,
+      "citation_coverage": 0.0,
+      "latency_s": 1.33,
+      "failure_mode": null
+    },
+    {
+      "item_id": "AR-006",
+      "category": "factual",
+      "difficulty": "easy",
+      "question": "ما هو عمر الأطفال الذي توصي فيه AAP ببدء فحص التوحد الشامل؟",
+      "precision_at_k": {
+        "3": 1.0,
+        "5": 0.8
+      },
+      "retrieved_sources": [
+        "identificationevaluationand_managementofchildrenwithautism_spectrumdisorder",
+        "11102024  ABA for ASD Guidelines  For publication",
+        "peds.2019-3449"
+      ],
+      "predicted_verdict": "",
+      "correct_verdict": false,
+      "recall_at_10": 1.0,
+      "ndcg_at_5": 1.5706417189553201,
+      "citation_coverage": 1.0,
+      "latency_s": 1.45,
+      "failure_mode": null
+    },
+    {
+      "item_id": "AR-007",
+      "category": "factual",
+      "difficulty": "medium",
+      "question": "ما هي معايير DSM-5 التشخيصية لاضطراب طيف التوحد؟",
+      "precision_at_k": {
+        "3": 0.3333333333333333,
+        "5": 0.2
+      },
+      "retrieved_sources": [
+        "WHO_ASD_Comprehensive_Efforts_2014",
+        "identificationevaluationand_managementofchildrenwithautism_spectrumdisorder",
+        "DSM5_ASD_Diagnostic_Criteria",
+        "100_Day_Tool_Kit_School_Aged_Children_0"
+      ],
+      "predicted_verdict": "",
+      "correct_verdict": false,
+      "recall_at_10": 0.5,
+      "ndcg_at_5": 0.3065735963827292,
+      "citation_coverage": 1.0,
+      "latency_s": 1.26,
+      "failure_mode": "WRONG_TOPIC_SECTION (top section: 'Diagnostic Criteria: DSM-5')"
+    },
+    {
+      "item_id": "AR-008",
+      "category": "factual",
+      "difficulty": "medium",
+      "question": "كيف يقارن فحص المتابعة بالعيون مع M-CHAT-R/F في تشخيص التوحد المبكر؟",
+      "precision_at_k": {
+        "3": 0.0,
+        "5": 0.2
+      },
+      "retrieved_sources": [
+        "Eye-Tracking_Biomarkers_and_Autism_Diagnosis_in_Pr",
+        "identificationevaluationand_managementofchildrenwithautism_spectrumdisorder",
+        "ASD_Screening_Diagnosis_Tools_MetaAnalysis_2024"
+      ],
+      "predicted_verdict": "",
+      "correct_verdict": false,
+      "recall_at_10": 1.0,
+      "ndcg_at_5": 0.38685280723454163,
+      "citation_coverage": 1.0,
+      "latency_s": 1.37,
+      "failure_mode": "WRONG_TOPIC_SECTION (top section: 'Screening by Age Group')"
+    },
+    {
+      "item_id": "AR-009",
+      "category": "inferential",
+      "difficulty": "hard",
+      "question": "إذا كان الطفل يظهر تأخر في اللغة وتعبيرات الوجه، هل يكفي ذلك لتشخيص ASD؟",
+      "precision_at_k": {
+        "3": 0.6666666666666666,
+        "5": 0.4
+      },
+      "retrieved_sources": [
+        "100_Day_Tool_Kit_School_Aged_Children_0",
+        "identificationevaluationand_managementofchildrenwithautism_spectrumdisorder",
+        "NICE_CG128_Autism_Guidelines"
+      ],
+      "predicted_verdict": "",
+      "correct_verdict": false,
+      "recall_at_10": 0.5,
+      "ndcg_at_5": 1.0,
+      "citation_coverage": 1.0,
+      "latency_s": 1.45,
+      "failure_mode": null
+    },
+    {
+      "item_id": "AR-010",
+      "category": "adversarial",
+      "difficulty": "medium",
+      "question": "هل يمكن علاج التوحد بالعلاج البديل؟",
+      "precision_at_k": {
+        "3": 0.0,
+        "5": 0.0
+      },
+      "retrieved_sources": [
+        "psychotropic-medication-prescribing-in-people-with-autism-spectrum-disorders-with-and-without-psychiatric-comorbidity",
+        "100_Day_Tool_Kit_School_Aged_Children_0",
+        "identificationevaluationand_managementofchildrenwithautism_spectrumdisorder"
+      ],
+      "predicted_verdict": "SAFE_NO_ANSWER",
+      "correct_verdict": true,
+      "recall_at_10": 0.0,
+      "ndcg_at_5": 0.0,
+      "citation_coverage": 0.0,
+      "latency_s": 1.25,
+      "failure_mode": null
+    },
+    {
+      "item_id": "AR-011",
+      "category": "factual",
+      "difficulty": "easy",
+      "question": "ما هي الأدوية المعتمدة من FDA لعلاج أعراض العدوانية في التوحد؟",
+      "precision_at_k": {
+        "3": 0.6666666666666666,
+        "5": 0.4
+      },
+      "retrieved_sources": [
+        "psychotropic-medication-prescribing-in-people-with-autism-spectrum-disorders-with-and-without-psychiatric-comorbidity",
+        "100_Day_Tool_Kit_School_Aged_Children_0",
+        "identificationevaluationand_managementofchildrenwithautism_spectrumdisorder"
+      ],
+      "predicted_verdict": "",
+      "correct_verdict": false,
+      "recall_at_10": 1.0,
+      "ndcg_at_5": 1.1309297535714575,
+      "citation_coverage": 1.0,
+      "latency_s": 1.15,
+      "failure_mode": null
+    },
+    {
+      "item_id": "AR-012",
+      "category": "factual",
+      "difficulty": "medium",
+      "question": "ما هو التدخل السلوكي المبكر المكثف (EIBI) للتوحد؟",
+      "precision_at_k": {
+        "3": 0.6666666666666666,
+        "5": 0.4
+      },
+      "retrieved_sources": [
+        "APBAwhitepaperABAinterventions",
+        "identificationevaluationand_managementofchildrenwithautism_spectrumdisorder",
+        "11102024  ABA for ASD Guidelines  For publication"
+      ],
+      "predicted_verdict": "",
+      "correct_verdict": false,
+      "recall_at_10": 1.0,
+      "ndcg_at_5": 1.6309297535714575,
+      "citation_coverage": 1.0,
+      "latency_s": 1.13,
+      "failure_mode": null
+    },
+    {
+      "item_id": "AR-013",
+      "category": "out_of_scope",
+      "difficulty": "easy",
+      "question": "ما هي أفضل مطعم في القاهرة؟",
+      "precision_at_k": {
+        "3": 0.0,
+        "5": 0.0
+      },
+      "retrieved_sources": [
+        "WHO_ASD_Progress_Report_2017",
+        "2021-surveillance-of-autism-nice-guidelines-cg128-cg142-and-cg170-pdf-11846121650629",
+        "identificationevaluationand_managementofchildrenwithautism_spectrumdisorder",
+        "Eye-Tracking_Biomarkers_and_Autism_Diagnosis_in_Pr",
+        "Experiences of receiving a diagnosis of autism spectrum disorder"
+      ],
+      "predicted_verdict": "SAFE_NO_ANSWER",
+      "correct_verdict": true,
+      "recall_at_10": 0.0,
+      "ndcg_at_5": 0.0,
+      "citation_coverage": 0.0,
+      "latency_s": 1.26,
+      "failure_mode": null
+    },
+    {
+      "item_id": "AR-014",
+      "category": "inferential",
+      "difficulty": "hard",
+      "question": "كيف يؤثر التوحد على القدرة على الدراسة في المدرسة؟",
+      "precision_at_k": {
+        "3": 0.3333333333333333,
+        "5": 0.4
+      },
+      "retrieved_sources": [
+        "AIR-P_Research_Agenda",
+        "100_Day_Tool_Kit_School_Aged_Children_0",
+        "identificationevaluationand_managementofchildrenwithautism_spectrumdisorder",
+        "NICE_CG128_Autism_Guidelines"
+      ],
+      "predicted_verdict": "",
+      "correct_verdict": false,
+      "recall_at_10": 1.0,
+      "ndcg_at_5": 0.9306765580733931,
+      "citation_coverage": 1.0,
+      "latency_s": 1.15,
+      "failure_mode": null
+    },
+    {
+      "item_id": "AR-015",
+      "category": "factual",
+      "difficulty": "medium",
+      "question": "ما هي مستويات خطورة DSM-5 الثلاثة للتوحد؟",
+      "precision_at_k": {
+        "3": 0.0,
+        "5": 0.0
+      },
+      "retrieved_sources": [
+        "Eye-Tracking_Biomarkers_and_Autism_Diagnosis_in_Pr",
+        "100_Day_Tool_Kit_School_Aged_Children_0",
+        "identificationevaluationand_managementofchildrenwithautism_spectrumdisorder",
+        "NICE_CG128_Autism_Guidelines"
+      ],
+      "predicted_verdict": "",
+      "correct_verdict": false,
+      "recall_at_10": 0.0,
+      "ndcg_at_5": 0.0,
+      "citation_coverage": 1.0,
+      "latency_s": 1.36,
+      "failure_mode": "MISSING_SOURCE (retrieved 'identificationevaluationand_managementofchildrenwithautism_spectrumdisorder' instead of expected)"
+    },
+    {
+      "item_id": "NICE-001",
+      "category": "factual",
+      "difficulty": "medium",
+      "question": "According to NICE CG128, what is the maximum wait time for ASD assessment after referral?",
+      "precision_at_k": {
+        "3": 1.0,
+        "5": 0.8
+      },
+      "retrieved_sources": [
+        "2021-surveillance-of-autism-nice-guidelines-cg128-cg142-and-cg170-pdf-11846121650629",
+        "Experiences of receiving a diagnosis of autism spectrum disorder",
+        "NICE_CG128_Autism_Guidelines"
+      ],
+      "predicted_verdict": "",
+      "correct_verdict": false,
+      "recall_at_10": 1.0,
+      "ndcg_at_5": 1.5706417189553201,
+      "citation_coverage": 1.0,
+      "latency_s": 0.79,
+      "failure_mode": null
+    },
+    {
+      "item_id": "NICE-002",
+      "category": "factual",
+      "difficulty": "easy",
+      "question": "What professional disciplines should form the core ASD assessment team according to NICE CG128?",
+      "precision_at_k": {
+        "3": 1.0,
+        "5": 0.8
+      },
+      "retrieved_sources": [
+        "psychotropic-medication-prescribing-in-people-with-autism-spectrum-disorders-with-and-without-psychiatric-comorbidity",
+        "2021-surveillance-of-autism-nice-guidelines-cg128-cg142-and-cg170-pdf-11846121650629",
+        "NICE_CG128_Autism_Guidelines"
+      ],
+      "predicted_verdict": "",
+      "correct_verdict": false,
+      "recall_at_10": 1.0,
+      "ndcg_at_5": 1.5437713091520255,
+      "citation_coverage": 1.0,
+      "latency_s": 0.81,
+      "failure_mode": null
+    },
+    {
+      "item_id": "NICE-003",
+      "category": "factual",
+      "difficulty": "medium",
+      "question": "What does NICE CG128 recommend for children who do not meet the threshold for ASD diagnosis?",
+      "precision_at_k": {
+        "3": 1.0,
+        "5": 0.8
+      },
+      "retrieved_sources": [
+        "psychotropic-medication-prescribing-in-people-with-autism-spectrum-disorders-with-and-without-psychiatric-comorbidity",
+        "2021-surveillance-of-autism-nice-guidelines-cg128-cg142-and-cg170-pdf-11846121650629",
+        "NICE_CG128_Autism_Guidelines"
+      ],
+      "predicted_verdict": "",
+      "correct_verdict": false,
+      "recall_at_10": 1.0,
+      "ndcg_at_5": 1.5437713091520255,
+      "citation_coverage": 1.0,
+      "latency_s": 0.95,
+      "failure_mode": null
+    },
+    {
+      "item_id": "NICE-004",
+      "category": "factual",
+      "difficulty": "hard",
+      "question": "What are the NICE CG128 quality standards for ASD diagnosis in adults?",
+      "precision_at_k": {
+        "3": 0.6666666666666666,
+        "5": 0.6
+      },
+      "retrieved_sources": [
+        "psychotropic-medication-prescribing-in-people-with-autism-spectrum-disorders-with-and-without-psychiatric-comorbidity",
+        "2021-surveillance-of-autism-nice-guidelines-cg128-cg142-and-cg170-pdf-11846121650629",
+        "11102024  ABA for ASD Guidelines  For publication",
+        "NICE_CG128_Autism_Guidelines"
+      ],
+      "predicted_verdict": "",
+      "correct_verdict": false,
+      "recall_at_10": 1.0,
+      "ndcg_at_5": 1.2371977127692964,
+      "citation_coverage": 1.0,
+      "latency_s": 0.93,
+      "failure_mode": null
+    },
+    {
+      "item_id": "NICE-005",
+      "category": "inferential",
+      "difficulty": "hard",
+      "question": "A 5-year-old in the UK has been referred for ASD assessment. The local team has a 6-month wait. What does NICE say about this?",
+      "precision_at_k": {
+        "3": 0.6666666666666666,
+        "5": 0.6
+      },
+      "retrieved_sources": [
+        "2021-surveillance-of-autism-nice-guidelines-cg128-cg142-and-cg170-pdf-11846121650629",
+        "identificationevaluationand_managementofchildrenwithautism_spectrumdisorder",
+        "11102024  ABA for ASD Guidelines  For publication",
+        "NICE_CG128_Autism_Guidelines"
+      ],
+      "predicted_verdict": "",
+      "correct_verdict": false,
+      "recall_at_10": 1.0,
+      "ndcg_at_5": 1.1837889117207785,
+      "citation_coverage": 1.0,
+      "latency_s": 0.76,
+      "failure_mode": null
+    },
+    {
+      "item_id": "NICE-006",
+      "category": "factual",
+      "difficulty": "easy",
+      "question": "Does NICE CG128 recommend routine ASD screening in the general population?",
+      "precision_at_k": {
+        "3": 1.0,
+        "5": 0.8
+      },
+      "retrieved_sources": [
+        "psychotropic-medication-prescribing-in-people-with-autism-spectrum-disorders-with-and-without-psychiatric-comorbidity",
+        "2021-surveillance-of-autism-nice-guidelines-cg128-cg142-and-cg170-pdf-11846121650629",
+        "NICE_CG128_Autism_Guidelines"
+      ],
+      "predicted_verdict": "",
+      "correct_verdict": false,
+      "recall_at_10": 1.0,
+      "ndcg_at_5": 1.5706417189553201,
+      "citation_coverage": 1.0,
+      "latency_s": 0.74,
+      "failure_mode": null
+    },
+    {
+      "item_id": "NICE-007",
+      "category": "factual",
+      "difficulty": "medium",
+      "question": "What post-diagnostic support does NICE CG128 recommend for families?",
+      "precision_at_k": {
+        "3": 1.0,
+        "5": 0.8
+      },
+      "retrieved_sources": [
+        "2021-surveillance-of-autism-nice-guidelines-cg128-cg142-and-cg170-pdf-11846121650629",
+        "11102024  ABA for ASD Guidelines  For publication",
+        "NICE_CG128_Autism_Guidelines"
+      ],
+      "predicted_verdict": "",
+      "correct_verdict": false,
+      "recall_at_10": 1.0,
+      "ndcg_at_5": 1.5706417189553201,
+      "citation_coverage": 1.0,
+      "latency_s": 1.24,
+      "failure_mode": null
+    },
+    {
+      "item_id": "NICE-008",
+      "category": "adversarial",
+      "difficulty": "medium",
+      "question": "Can a GP diagnose ASD based solely on NICE guidelines without specialist referral?",
+      "precision_at_k": {
+        "3": 0.6666666666666666,
+        "5": 0.4
+      },
+      "retrieved_sources": [
+        "11102024  ABA for ASD Guidelines  For publication",
+        "NICE_CG128_Autism_Guidelines",
+        "2021-surveillance-of-autism-nice-guidelines-cg128-cg142-and-cg170-pdf-11846121650629",
+        "identificationevaluationand_managementofchildrenwithautism_spectrumdisorder",
+        "100_Day_Tool_Kit_School_Aged_Children_0"
+      ],
+      "predicted_verdict": "SAFE_NO_ANSWER",
+      "correct_verdict": true,
+      "recall_at_10": 1.0,
+      "ndcg_at_5": 0.6934264036172708,
+      "citation_coverage": 1.0,
+      "latency_s": 0.8,
+      "failure_mode": null
+    },
+    {
+      "item_id": "NICE-009",
+      "category": "factual",
+      "difficulty": "medium",
+      "question": "What is the NICE CG128 recommendation on using observation in ASD assessment?",
+      "precision_at_k": {
+        "3": 1.0,
+        "5": 0.8
+      },
+      "retrieved_sources": [
+        "psychotropic-medication-prescribing-in-people-with-autism-spectrum-disorders-with-and-without-psychiatric-comorbidity",
+        "2021-surveillance-of-autism-nice-guidelines-cg128-cg142-and-cg170-pdf-11846121650629",
+        "NICE_CG128_Autism_Guidelines"
+      ],
+      "predicted_verdict": "",
+      "correct_verdict": false,
+      "recall_at_10": 1.0,
+      "ndcg_at_5": 1.5706417189553201,
+      "citation_coverage": 1.0,
+      "latency_s": 0.84,
+      "failure_mode": null
+    },
+    {
+      "item_id": "NICE-010",
+      "category": "out_of_scope",
+      "difficulty": "easy",
+      "question": "What does NICE say about treating diabetes in children?",
+      "precision_at_k": {
+        "3": 0.0,
+        "5": 0.0
+      },
+      "retrieved_sources": [
+        "11102024  ABA for ASD Guidelines  For publication",
+        "psychotropic-medication-prescribing-in-people-with-autism-spectrum-disorders-with-and-without-psychiatric-comorbidity",
+        "NICE_CG128_Autism_Guidelines",
+        "identificationevaluationand_managementofchildrenwithautism_spectrumdisorder",
+        "peds.2019-3449"
+      ],
+      "predicted_verdict": "SAFE_NO_ANSWER",
+      "correct_verdict": true,
+      "recall_at_10": 0.0,
+      "ndcg_at_5": 0.0,
+      "citation_coverage": 0.0,
+      "latency_s": 0.62,
+      "failure_mode": null
+    }
+  ]
+}
