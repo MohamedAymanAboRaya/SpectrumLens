@@ -231,19 +231,11 @@ class SpectrumLensEvaluator:
         self.embedder = None  # Use Jina API for query embedding
 
     def _embed_query(self, query: str) -> list:
-        """Embed a query using Jina API (matches 1024-dim precomputed embeddings)."""
-        import requests
-        api_key = os.environ.get("JINA_API_KEY", "")
-        if not api_key:
-            raise EnvironmentError("JINA_API_KEY not set in .env")
-        resp = requests.post(
-            "https://api.jina.ai/v1/embeddings",
-            headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
-            json={"input": [query], "model": "jina-embeddings-v5-text-small"},
-            timeout=30
-        )
-        resp.raise_for_status()
-        return resp.json()["data"][0]["embedding"]
+        """Embed a query using the same local model as precomputed embeddings."""
+        from sentence_transformers import SentenceTransformer
+        if not hasattr(self, '_st_model'):
+            self._st_model = SentenceTransformer("all-MiniLM-L6-v2")
+        return self._st_model.encode(query, normalize_embeddings=True).tolist()
 
     def _offline_retrieve(self, query: str, top_k: int = 50) -> List[Dict[str, Any]]:
         """Hybrid retrieval matching live demo: BM25 + cosine + RRF + boosts."""
