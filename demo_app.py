@@ -786,7 +786,7 @@ def hybrid_search(query: str, embedder, index: np.ndarray,
 
 
 def score_class(s: float) -> str:
-    return "high" if s >= 0.65 else ("medium" if s >= 0.40 else "low")
+    return "high" if s >= 0.55 else ("medium" if s >= 0.40 else "low")
 
 
 # ─── Precision@K ─────────────────────────────────────────────────────────────
@@ -829,19 +829,23 @@ def estimate_confidence(chunks: List[Dict], answer: str) -> str:
     if not chunks:
         return "INSUFFICIENT"
     top_sim = max(c.get("similarity", 0) for c in chunks)
-    citations = re.findall(r'\[SOURCE:.*?\]', answer or '')
+    avg_sim = sum(c.get("similarity", 0) for c in chunks) / len(chunks)
+    # Match both old [SOURCE: ...] and new 【Source N】 citation formats
+    citations = re.findall(r'\[SOURCE:.*?\]|【Source \d+】', answer or '')
     unique_docs = len(set(c.get("document_name", "") for c in chunks))
     cited_docs = len(set(c.lower()[:20] for c in citations))
-    # Score based on evidence quality
+    # Score based on evidence quality (calibrated for 3072-dim embeddings)
     score = 0
-    if top_sim >= 0.65: score += 3
-    elif top_sim >= 0.45: score += 2
-    elif top_sim >= 0.30: score += 1
+    if top_sim >= 0.60: score += 3
+    elif top_sim >= 0.50: score += 2
+    elif top_sim >= 0.35: score += 1
+    if avg_sim >= 0.50: score += 1
     if len(citations) >= 2: score += 2
     elif len(citations) >= 1: score += 1
     if cited_docs >= 2: score += 1
-    if unique_docs >= 2: score += 1
-    if score >= 6: return "HIGH"
+    if unique_docs >= 3: score += 1
+    elif unique_docs >= 2: score += 1
+    if score >= 7: return "HIGH"
     if score >= 4: return "MEDIUM"
     if score >= 2: return "LOW"
     return "INSUFFICIENT"
@@ -1259,9 +1263,9 @@ with st.sidebar:
     st.markdown("---")
     st.markdown("### 🌍 Embedding Model")
     if Path(PRECOMPUTED_NPZ).exists():
-        st.success("`Precomputed Index`  \nInstant load from disk")
-    elif JINA_KEY:
-        st.markdown("`Jina AI API`  \n1024-dim · Arabic + English · Fast (~2 min upload)")
+        st.success("`Precomputed Index`  \nOpenRouter text-embedding-3-large · 3072-dim · Best quality")
+    elif OPENROUTER_KEY:
+        st.markdown("`OpenRouter API`  \n3072-dim · Best quality · Fast (~2s query)")
     elif HF_TOKEN:
         st.markdown("`HF Inference API`  \nBGE-M3 · Free · 1024-dim")
     else:
@@ -1468,6 +1472,7 @@ with tab_search:
             # ── Confidence Summary Bar ──
             top_sim = max(c.get("similarity", 0) for c in results)
             avg_sim = sum(c.get("similarity", 0) for c in results) / len(results)
+            unique_docs = len(set(c.get("document_name", "") for c in results))
             conf = estimate_confidence(results, "")
             conf_colors = {"HIGH": "#00c875", "MEDIUM": "#f59e0b", "LOW": "#ef4444", "INSUFFICIENT": "#6b7280"}
             conf_color = conf_colors.get(conf, "#6b7280")
@@ -1475,7 +1480,7 @@ with tab_search:
             st.markdown(f"""
             <div style="background:#0d1b2a;border:1px solid #1a2332;border-radius:8px;padding:10px 16px;margin-bottom:12px;display:flex;align-items:center;gap:16px;">
               <div style="flex:1">
-                <div style="color:#8ba6c0;font-size:0.78rem;margin-bottom:4px">Evidence Confidence</div>
+                <div style="color:#8ba6c0;font-size:0.78rem;margin-bottom:4px">Evidence Confidence · {unique_docs} source{'' if unique_docs==1 else 's'} retrieved</div>
                 <div style="background:#1a2332;border-radius:4px;height:8px;overflow:hidden">
                   <div style="background:{conf_color};width:{bar_width}%;height:100%;border-radius:4px;transition:width 0.5s"></div>
                 </div>
@@ -1490,7 +1495,8 @@ with tab_search:
             for i, chunk in enumerate(results):
                 cls = "ev-card top" if i == 0 else "ev-card"
                 top_lbl = " 🥇 Top Match" if i == 0 else ""
-                sc = score_class(chunk.get("similarity", 0))
+                sim = chunk.get("similarity", 0)
+                sc = score_class(sim)
                 lang = chunk.get("language", "en")
                 lang_badge = f'<span class="lang-badge-ar">🇸🇦 AR</span>' if lang == "ar" else f'<span class="lang-badge-en">🇬🇧 EN</span>'
                 excerpt_text = chunk.get("original_text") or chunk.get("text", "")
@@ -1504,12 +1510,19 @@ with tab_search:
                     auth_badge = '<span style="background:#7ecfff30;color:#7ecfff;padding:2px 8px;border-radius:10px;font-size:0.72rem;font-weight:600;margin-left:6px">📚 Peer-Reviewed</span>'
                 else:
                     auth_badge = '<span style="background:#8ba6c030;color:#8ba6c0;padding:2px 8px;border-radius:10px;font-size:0.72rem;font-weight:600;margin-left:6px">📄 Toolkit</span>'
+                # Similarity bar width
+                sim_pct = int(min(sim, 1.0) * 100)
                 st.markdown(f"""
                 <div class="{cls}">
-                  <div class="ev-rank">Evidence #{i+1} — Rank #{i+1}{top_lbl}</div>
+                  <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+                    <div class="ev-rank" style="margin:0">Evidence #{i+1}{top_lbl}</div>
+                    <div style="flex:1;height:4px;background:#1e293b;border-radius:2px;overflow:hidden">
+                      <div style="width:{sim_pct}%;height:100%;background:{'#00c875' if sim>=0.55 else '#f59e0b' if sim>=0.40 else '#ef4444'};border-radius:2px"></div>
+                    </div>
+                    <div style="font-size:0.75rem;font-weight:700;color:{'#00c875' if sim>=0.55 else '#f59e0b' if sim>=0.40 else '#ef4444'}">{sim:.3f}</div>
+                  </div>
                   <div class="ev-title">
                     📄 {chunk['document_name']}
-                    <span class="pill {sc}">sim {chunk.get('similarity', 0):.3f}</span>
                     {lang_badge}
                     {auth_badge}
                   </div>
@@ -1715,7 +1728,7 @@ with tab_eval:
                 row["lat_ms"] = row.get("latency_s", 0) * 1000
                 row["top_docs"] = row.get("retrieved_sources", [])
             prog = st.progress(1.0, text=f"Loaded {len(results_rows)} verified results from eval_report_final.json")
-            st.success(f"✅ Loaded {len(results_rows)} verified results (Jina 1024-dim + BM25 + RRF)")
+            st.success(f"✅ Loaded {len(results_rows)} verified results (3072-dim + BM25 + RRF)")
             ndcg_scores = [r.get("ndcg", 0) for r in results_rows]
             recall_scores = [r.get("recall", 0) for r in results_rows]
 
@@ -1819,8 +1832,8 @@ with tab_eval:
         st.dataframe(pd.DataFrame(cat_data), use_container_width=True, hide_index=True)
 
     st.markdown("---")
-    st.markdown("### 📊 Verified Offline Eval Results (Jina 1024-dim + BM25 + RRF)")
-    st.caption("Fresh eval run: 2026-08-19 | 50 questions | Embeddings: jina-embeddings-v5-text-small (1024-dim)")
+    st.markdown("### 📊 Verified Offline Eval Results (3072-dim + BM25 + RRF)")
+    st.caption("Fresh eval run: 2026-08-19 | 50 questions | Embeddings: text-embedding-3-large (3072-dim)")
     comp = pd.DataFrame({
         "Metric": ["P@3", "P@5", "Recall@10", "nDCG@5", "OOS Refusal", "Citation Coverage"],
         "Value": ["0.567", "0.428", "0.617", "0.872", "100%", "0.760"],
@@ -1880,7 +1893,7 @@ with tab_arch:
     with r1a2:
         st.markdown('<div class="arch-arrow">→</div>', unsafe_allow_html=True)
     with r1c3:
-        st.markdown('<div class="arch-flow-box">🧬 Embedding<br><small style="color:#8ba6c0">1024-dim (Jina AI)</small></div>', unsafe_allow_html=True)
+        st.markdown('<div class="arch-flow-box">🧬 Embedding<br><small style="color:#8ba6c0">3072-dim (OpenRouter)</small></div>', unsafe_allow_html=True)
     with r1a3:
         st.markdown('<div class="arch-arrow">→</div>', unsafe_allow_html=True)
     with r1c4:
@@ -1919,7 +1932,7 @@ with tab_arch:
         st.markdown("""
         <div class="model-card">
           <div class="mc-title">🧬 Embedder</div>
-          <div class="mc-detail">jina-embeddings-v5-text-small<br>1024-dim · 100+ languages<br>Arabic & English cross-lingual</div>
+          <div class="mc-detail">text-embedding-3-large<br>3072-dim · Best quality<br>Arabic & English cross-lingual</div>
         </div>
         """, unsafe_allow_html=True)
     with mc2:
