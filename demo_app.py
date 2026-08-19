@@ -1306,7 +1306,7 @@ def _render_citations_html(answer: str, chunks: List[Dict]) -> str:
         }
 
     def _replace_source_n(match):
-        n = int(match.group(1))
+        n = int(match.group(2))  # group 2 is the digit, group 1 is optional whitespace
         info = source_map.get(n)
         if not info:
             return match.group(0)
@@ -1319,8 +1319,8 @@ def _render_citations_html(answer: str, chunks: List[Dict]) -> str:
                 f'style="color:{color};border-color:{color}40">'
                 f'Source {n}</a>')
 
-    # Replace 【Source N】 format
-    result = _re.sub(r'【Source (\d+)】', _replace_source_n, answer)
+    # Replace 【Source N】 format (with or without space: 【Source1】 or 【Source 1】)
+    result = _re.sub(r'【Source(\s*)(\d+)】', _replace_source_n, answer)
 
     # Replace [SOURCE: doc, section, page] format
     def _replace_source_old(match):
@@ -1348,11 +1348,13 @@ def _parse_answer_sections(raw: str) -> dict:
     raw = _re.sub(r'\n*---\n*\*\*Confidence:\*\*.*$', '', raw, flags=_re.DOTALL)
     raw = _re.sub(r'\n*⚠️\s*\d+\s*claim.*?evidence\.?$', '', raw, flags=_re.DOTALL)
 
-    # Convert "Source N" (without brackets) to 【Source N】 for clickable links
-    raw = _re.sub(r'Source\s+(\d+)', r'【Source \1】', raw)
-    # Deduplicate any double-bracket: 【【Source N】】 → 【Source N】
-    raw = _re.sub(r'【【Source (\d+)】】', r'【Source \1】', raw)
-    raw = _re.sub(r'【【Source (\d+)】', r'【Source \1】', raw)
+    # Convert "Source N" or "SourceN" (without brackets) to 【Source N】 for clickable links
+    raw = _re.sub(r'Source\s*(\d+)', r'【Source \1】', raw)
+    # Normalize 【Source1】 (no space) to 【Source 1】
+    raw = _re.sub(r'【Source(\d+)】', r'【Source \1】', raw)
+    # Deduplicate any double-bracket: 【【Source N】】 → 【Source 1】
+    raw = _re.sub(r'【【Source\s*(\d+)】】', r'【Source \1】', raw)
+    raw = _re.sub(r'【【Source\s*(\d+)】', r'【Source \1】', raw)
 
     # ── Extract answer text (everything before evidence/confidence/disclaimer) ──
     answer_end = len(raw)
@@ -1462,19 +1464,16 @@ def _render_structured_answer(raw: str, chunks: List[Dict]) -> str:
       .conf-meter-fill {{ height:100%; border-radius:6px; transition:width 0.8s ease; }}
     </style>
 
-    <!-- Answer -->
     <div class="llm-section">
       <div class="llm-section-title">📋 Clinical Answer</div>
       <div class="llm-answer-text">{answer_html}</div>
     </div>
 
-    <!-- Evidence Sources -->
     <div class="llm-section">
       <div class="llm-section-title">📚 Evidence Sources ({len(chunks)} retrieved)</div>
       {ev_cards}
     </div>
 
-    <!-- Confidence Meter -->
     <div class="llm-section">
       <div class="llm-section-title">🎯 Evidence Confidence</div>
       <div style="display:flex;align-items:center;gap:12px">
@@ -1489,7 +1488,6 @@ def _render_structured_answer(raw: str, chunks: List[Dict]) -> str:
       </div>
     </div>
 
-    <!-- Disclaimer -->
     <div style="padding:10px 14px;background:#0a1520;border-left:3px solid #f59e0b;border-radius:0 8px 8px 0;margin-top:4px">
       <div style="color:#f59e0b;font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:2px">⚕️ Clinical Disclaimer</div>
       <div style="color:#5a7a9a;font-size:0.78rem;font-style:italic">This output is generated from clinical guidelines for decision support only. It does not replace professional medical judgment. Consult a qualified healthcare provider for clinical decisions.</div>
