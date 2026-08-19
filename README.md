@@ -42,59 +42,33 @@ streamlit run demo_app.py
 
 ## Architecture
 
+```mermaid
+flowchart TD
+    A["User Query\n(Arabic or English)"] --> B{Language\nDetect}
+    B -->|Arabic| C["Arabic → English\nRuntime Translation"]
+    B -->|English| D["Medical Acronym\nExpansion"]
+    C --> D
+    D --> E["Jina AI v5\n1024-dim Embed"]
+    E --> F["Hybrid Search\nSemantic + BM25 + RRF\n+ Domain Boosts"]
+    F --> G["Section + Content\nKeyword Boosts\n+ MAX-1-PER-DOC"]
+    G --> H["Jina Reranker v3.5\n→ Top 5 Chunks"]
+    H --> I{Scope Check\nKeyword Matching}
+    I -->|REFUSE| J["⛔ Safe Failure\nNo answer given"]
+    I -->|ALLOWED| K["Confidence Gate\nSimilarity Threshold"]
+    I -->|NEEDS_CAUTION| K
+    K -->|LOW| J
+    K -->|OK| L["Generator\nGPT-5.6-sol / Gemini / Groq\nBilingual cited answer"]
+    L --> M["Citation Verifier\n3-Tier Guardrail"]
+    M --> N["Unsupported Claim\nDetector"]
+    N --> O["Streamlit UI\nEvidence Panel → Answer"]
 ```
-Clinical PDFs (23 documents, 1,801 chunks)
-        |  day1_ingestion.py
-        v
-   PDF Parsing & Chunking
-   + Adaptive section-header detection
-   + Arabic/English normalization
-   + Dual-field: original_text + normalized_text
-   + Metadata: doc_name, page, section, chunk_id, source_url
-        |
-        v  Precomputed Embeddings (384-dim, instant load)
-   SentenceTransformers (paraphrase-multilingual-MiniLM-L12-v2)
-        |
-   User Query (Arabic or English)
-        |
-        +-- Language Detection (ArabicPreprocessor)
-        +-- Arabic → English runtime translation (Groq/Allam-2-7b)
-        +-- Medical Acronym Expansion (AAP, DSM-5, M-CHAT-R/F, NICE...)
-        +-- Hybrid Search: Semantic + BM25 + RRF → Top 50
-        +-- ORG-Keyword Metadata Boost (+30% for org-matched docs)
-        +-- Section-Title Similarity Boost (+20% for section overlap)
-        +-- MAX-1-CHUNK-PER-DOCUMENT Deduplication
-        +-- Jina Reranker v3.5 → Top 5
-        |
-        +-- Scope Check (GPT-5.6-sol / Allam-2-7b) ← TERNARY
-        |       ALLOWED / NEEDS_CAUTION / REFUSE
-        |
-        +-- Critic Agent (GPT-5.6-sol / Allam-2-7b)
-        |       SUFFICIENT / INSUFFICIENT (threshold: mean ≥ 6/10)
-        |
-        v
-   Generator (AgentRouter → OpenRouter → Groq fallback)
-   + Bilingual cited answer
-   + Citation Verifier (structural + faithfulness)
-   + Clinical disclaimer
-        |
-        v
-   Streamlit UI
-   + Evidence Panel (BEFORE answer)
-   + Streaming token-by-token output
-   + Chat history + RTL Arabic support
-   + Provider selector (AgentRouter / OpenRouter / Groq)
-```
-   Bilingual answer + inline citations [SOURCE: doc, section, page]
-        |
-        +-- Citation Verifier (guardrails/citation_verifier.py)
-        |   - Tier 1: [SOURCE: ...] pattern validity
-        |   - Tier 2: Citation exists in retrieved chunks
-        |   - Tier 3: Sentence-level faithfulness (token overlap)
-        v
-   Streamlit Evidence Panel
-   (evidence shown BEFORE answer — required by hackathon guidelines)
-```
+
+**Pipeline Summary:**
+- **1 LLM call** (scope check replaced with keyword matching, critic replaced with similarity gate)
+- **Jina 1024-dim** embeddings (rebuilt `precomputed_embeddings.npz`)
+- **BM25 + RRF** hybrid with synonym expansion and domain boosts
+- **3-tier citation verification** (structural + content + faithfulness)
+- **50-question eval** (15 AR, 10 NICE, 7 ADV, 8 OOS)
 
 ---
 
