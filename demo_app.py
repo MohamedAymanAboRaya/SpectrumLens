@@ -1725,21 +1725,6 @@ with tab_eval:
             st.success(f"✅ Loaded {len(results_rows)} verified results (Jina 1024-dim + BM25 + RRF)")
             ndcg_scores = [r.get("ndcg", 0) for r in results_rows]
             recall_scores = [r.get("recall", 0) for r in results_rows]
-            ndcg_scores.append(_ndcg_at_k(retrieved, gt, 5))
-            recall_scores.append(_recall_at_k(retrieved, gt, 10))
-            srcs = list({c["document_name"] for c in retrieved[:5]})
-            results_rows.append({
-                "id": item["id"],
-                "category": item["category"],
-                "difficulty": item["difficulty"],
-                "question": item["question"][:60]+"…",
-                "p3": p3, "p5": p5,
-                "failure": fm or "✅ OK",
-                "sources": ", ".join(s[:20] for s in srcs[:2]),
-                "lat_ms": lat*1000,
-            })
-
-        prog.empty()
 
         # ── Aggregate ────────────────────────────────────────────────────────
         avg_p3 = sum(r["p3"] for r in results_rows)/len(results_rows)
