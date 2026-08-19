@@ -62,9 +62,9 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(
 logger = logging.getLogger("SpectrumLens-Generation")
 
 # ─── Constants ───────────────────────────────────────────────────────────────────
-SCOPE_MODEL      = "allam-2-7b"              # fast, no thinking mode, clean JSON
-CRITIC_MODEL     = "allam-2-7b"              # fast for scoring
-GENERATOR_MODEL  = "openai/gpt-oss-120b"     # clean output, no thinking, good Arabic
+SCOPE_MODEL      = "qwen/qwen3.6-27b"              # fastest Groq model
+CRITIC_MODEL     = "qwen/qwen3.6-27b"              # fast for scoring
+GENERATOR_MODEL  = "qwen/qwen3.6-27b"              # fastest generation
 RETRIEVAL_CANDIDATE_K = 20
 RERANK_TOP_N          = 5
 EVAL_THRESHOLD        = 6.0    # 0-10 scale: chunk must average ≥ 6 to pass

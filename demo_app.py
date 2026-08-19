@@ -136,7 +136,7 @@ section[data-testid="stSidebar"] { background:#0d1928; }
 # ─── Constants ───────────────────────────────────────────────────────────────
 CHUNKS_PATH   = "data/processed_chunks/day1_chunks_output.json"
 EVAL_PATH     = "data/eval/eval_dataset.json"
-EMBED_MODEL   = "openai/text-embedding-3-small"  # 1536-dim, OpenRouter API, fast
+EMBED_MODEL   = "openai/text-embedding-3-large"  # 3072-dim, best quality, OpenRouter API
 SAFETY_THRESH = 0.30
 GROQ_KEY      = os.environ.get("GROQ_API_KEY", "")
 JINA_KEY      = os.environ.get("JINA_API_KEY", "")
@@ -346,18 +346,19 @@ def load_embedder():
     if precomputed is not None:
         _, embeddings = precomputed
         dim = embeddings.shape[1]
-        if dim == 1536:
+        if dim in (1536, 3072):
             import requests as _req
             OPENROUTER_KEY = os.environ.get("OPENROUTER_API_KEY", "")
+            model = "openai/text-embedding-3-large" if dim == 3072 else "openai/text-embedding-3-small"
             class OpenRouterEmbedder:
                 API_URL = "https://openrouter.ai/api/v1/embeddings"
-                MODEL = "openai/text-embedding-3-small"
                 def __init__(self):
                     self._session = _req.Session()
                     self._session.headers.update({
                         "Authorization": f"Bearer {OPENROUTER_KEY}",
                         "Content-Type": "application/json",
                     })
+                    self._model = model
                 def encode(self, texts, normalize_embeddings=True, show_progress_bar=False, batch_size=32):
                     if isinstance(texts, str):
                         texts = [texts]
@@ -367,7 +368,7 @@ def load_embedder():
                         for attempt in range(3):
                             try:
                                 resp = self._session.post(self.API_URL, json={
-                                    "model": self.MODEL, "input": batch
+                                    "model": self._model, "input": batch
                                 }, timeout=30)
                                 if resp.status_code == 429:
                                     import time as _t; _t.sleep(2 * (attempt + 1)); continue
@@ -440,14 +441,15 @@ def cosine_search(query: str, embedder, index: np.ndarray,
                   threshold: float = SAFETY_THRESH,
                   language_filter: Optional[str] = None) -> List[Dict[str, Any]]:
     norm_query = _preprocessor.normalize_query(query)
-    # Use OpenRouter API directly for query embedding (matches 1536-dim precomputed)
+    # Use OpenRouter API directly for query embedding (matches precomputed dim)
     import requests as _req
     OPENROUTER_KEY = os.environ.get("OPENROUTER_API_KEY", "")
-    if OPENROUTER_KEY and index.shape[1] == 1536:
+    if OPENROUTER_KEY and index.shape[1] in (1536, 3072):
+        model = "openai/text-embedding-3-large" if index.shape[1] == 3072 else "openai/text-embedding-3-small"
         try:
             resp = _req.post("https://openrouter.ai/api/v1/embeddings",
                 headers={"Authorization": f"Bearer {OPENROUTER_KEY}", "Content-Type": "application/json"},
-                json={"input": norm_query, "model": "openai/text-embedding-3-small"},
+                json={"input": norm_query, "model": model},
                 timeout=15)
             if resp.status_code == 200:
                 q_emb = np.array(resp.json()["data"][0]["embedding"], dtype="float32")
@@ -462,7 +464,7 @@ def cosine_search(query: str, embedder, index: np.ndarray,
         q_emb = np.array(embedder.encode([norm_query], normalize_embeddings=True)[0], dtype="float32")
     if q_emb is None or q_emb.size == 0:
         return []
-    q_emb = q_emb[0]
+    q_emb = np.asarray(q_emb, dtype="float32").flatten()
     # Dimension guard: if mismatch, truncate/pad query to match index
     if q_emb.shape[0] != index.shape[1]:
         if q_emb.shape[0] > index.shape[1]:
@@ -701,7 +703,7 @@ def hybrid_search(query: str, embedder, index: np.ndarray,
     bm25_weight = 1.5 if is_keyword_heavy else 1.0
 
     fused = []
-    chunk_lookup = {c["chunk_id"]: c for c in sem_results + bm25_results}
+    chunk_lookup = {c["chunk_id"]: c for c in bm25_results + sem_results}
     for cid in all_ids:
         sem_rank  = sem_ranks.get(cid,  top_k * 8 + 1)
         bm25_rank = bm25_ranks.get(cid, top_k * 8 + 1)

@@ -199,6 +199,7 @@ class SpectrumLensEvaluator:
             logger.info("Evaluator ready (OFFLINE mode, precomputed embeddings) ✅")
         else:
             from day2_retrieval import VectorDBManager, ClinicalRetriever
+            from day3_generation import CRAGOrchestrator
             db = VectorDBManager()
             self.retriever = ClinicalRetriever(db)
             self.reranker = ClinicalReranker()
@@ -231,14 +232,14 @@ class SpectrumLensEvaluator:
         self.embedder = None  # Use API for query embedding
 
     def _embed_query(self, query: str) -> list:
-        """Embed a query using OpenRouter text-embedding-3-small (same model as precomputed)."""
+        """Embed a query using OpenRouter text-embedding-3-large (same model as precomputed)."""
         import requests
         openrouter_key = os.environ.get("OPENROUTER_API_KEY", "")
         if openrouter_key:
             try:
                 resp = requests.post("https://openrouter.ai/api/v1/embeddings",
                     headers={"Authorization": f"Bearer {openrouter_key}", "Content-Type": "application/json"},
-                    json={"input": query, "model": "openai/text-embedding-3-small"},
+                    json={"input": query, "model": "openai/text-embedding-3-large"},
                     timeout=15)
                 if resp.status_code == 200:
                     return resp.json()["data"][0]["embedding"]
@@ -335,7 +336,7 @@ class SpectrumLensEvaluator:
         kw = {'nice','cg128','dsm','fda','aap','cdc','who','m-chat','eye-tracking','risperidone','aripiprazole','aba','eibi'}
         bm_w = 1.5 if any(t in en_lower for t in kw) else 1.0
         all_ids = set(sem_ranks.keys()) | set(bm_ranks.keys())
-        lookup = {c["chunk_id"]: c for c in sem_results + [dict(self.chunks[i]) for i in range(len(self.chunks)) if self.chunks[i]["chunk_id"] in bm_ranks]}
+        lookup = {c["chunk_id"]: c for c in [dict(self.chunks[i]) for i in range(len(self.chunks)) if self.chunks[i]["chunk_id"] in bm_ranks] + sem_results}
         fused = []
         for cid in all_ids:
             sr = sem_ranks.get(cid, top_k*8+1); br = bm_ranks.get(cid, top_k*8+1)
