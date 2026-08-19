@@ -1063,6 +1063,28 @@ def _call_llm(messages, model_override=None, temperature=0, max_tokens=1200, res
                      temperature=temperature, max_tokens=max_tokens, response_format=response_format)
 
 
+def _sanitize_chunk_text(t: str) -> str:
+    """Strip patterns that LLM APIs may misinterpret as image input."""
+    import re as _re
+    if not t:
+        return ""
+    t = _re.sub(r'!\[.*?\]\([^)]*\)', '', t)
+    t = _re.sub(r'image\.png|image\.jpg|image\.jpeg|figure\.png|fig\.png', '', t, flags=_re.IGNORECASE)
+    t = _re.sub(r'<img[^>]*>', '', t, flags=_re.IGNORECASE)
+    t = _re.sub(r'ERROR:\s*Cannot read.*?Inform the user\.\s*', '', t, flags=_re.IGNORECASE)
+    return t.strip()
+
+
+def _sanitize_response(text: str) -> str:
+    """Strip LLM API error messages from response text."""
+    import re as _re
+    if not text:
+        return ""
+    text = _re.sub(r'ERROR:\s*Cannot read.*?Inform the user\.\s*', '', text, flags=_re.IGNORECASE)
+    text = _re.sub(r'This model does not support image input.*?\n', '', text, flags=_re.IGNORECASE)
+    return text.strip()
+
+
 def groq_generate(query: str, chunks: List[Dict]) -> tuple[str, str]:
     """Returns (verdict, answer_or_reason). FAST — keyword scope + similarity gate + 1 LLM call."""
     query_lang = detect_language(query)
@@ -1093,7 +1115,7 @@ def groq_generate(query: str, chunks: List[Dict]) -> tuple[str, str]:
     context = "\n\n".join(
         f"[EVIDENCE {i+1}]\nDocument: {c['document_name']}\n"
         f"Section: {c['section_title']}\nPage: {c['page_number']}\n"
-        f"Content: {(c.get('original_text') or c.get('text', ''))[:600]}"
+        f"Content: {_sanitize_chunk_text(c.get('original_text') or c.get('text', ''))[:600]}"
         for i, c in enumerate(chunks)
     )
 
@@ -1111,7 +1133,8 @@ def groq_generate(query: str, chunks: List[Dict]) -> tuple[str, str]:
     )
     if gen_response is None:
         return "ERROR", "All LLM providers failed for generation."
-    return "SUFFICIENT", gen_response.strip()
+    gen_response = _sanitize_response(gen_response)
+    return "SUFFICIENT", gen_response
 
 
 def groq_generate_stream(query: str, chunks: List[Dict]):
@@ -1159,7 +1182,7 @@ def groq_generate_stream(query: str, chunks: List[Dict]):
         f"[EVIDENCE {i+1}]\nDocument: {c['document_name']}\n"
         f"Section: {c['section_title']}\nPage: {c['page_number']}\n"
         f"Chunk ID: {c.get('chunk_id', 'N/A')}\n"
-        f"Content: {(c.get('original_text') or c.get('text', ''))[:600]}"
+        f"Content: {_sanitize_chunk_text(c.get('original_text') or c.get('text', ''))[:600]}"
         for i, c in enumerate(chunks)
     )
 
@@ -1181,12 +1204,15 @@ def groq_generate_stream(query: str, chunks: List[Dict]):
         full_answer += token
         yield None, token
 
-    # ── 5. Programmatic citation injection ──
+    # ── 5. Filter LLM API error messages from response ──
+    full_answer = _sanitize_response(full_answer)
+
+    # ── 6. Programmatic citation injection ──
     # If LLM didn't add citations, inject them by matching sentences to evidence
     if "[SOURCE:" not in full_answer and chunks:
         full_answer = _inject_citations(full_answer, chunks, query)
 
-    # ── 6. Confidence level & unsupported claim detection (Day 3 & 4) ──
+    # ── 7. Confidence level & unsupported claim detection (Day 3 & 4) ──
     confidence = estimate_confidence(chunks, full_answer)
     unsupported = detect_unsupported_claims(full_answer, chunks)
 
@@ -1468,9 +1494,8 @@ with st.sidebar:
     thresh   = st.slider("Min similarity", 0.10, 0.60, SAFETY_THRESH, 0.05)
     lang_filter = st.selectbox("Language Filter", ["All", "English", "Arabic"], index=0)
     lang_code = {"All": None, "English": "en", "Arabic": "ar"}[lang_filter]
-    use_reranker = False  # Jina API credits exhausted — disabled
-    st.checkbox("Two-Stage Reranking (Jina Reranker)", value=False, disabled=True,
-                help="⚠️ Jina API credits exhausted. Reranking unavailable.")
+    use_reranker = st.checkbox("Two-Stage Reranking (Cohere v3.5)", value=True,
+                                help="Re-rank top results with Cohere Rerank v3.5 for higher precision")
 
     st.markdown("---")
     st.markdown("## 🤖 LLM Provider / مزود الذكاء الاصطناعي")
