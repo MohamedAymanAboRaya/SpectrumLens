@@ -294,22 +294,25 @@ def _arabic_to_english_query(query: str) -> str:
     lang = detect_language(query)
     if lang != "ar":
         return query
-    groq_key = os.environ.get("GROQ_API_KEY", "")
-    if not groq_key:
+    openrouter_key = os.environ.get("OPENROUTER_API_KEY", "")
+    if not openrouter_key:
         return query
     try:
         resp = requests.post(
-            "https://api.groq.com/openai/v1/chat/completions",
-            headers={"Authorization": f"Bearer {groq_key}", "Content-Type": "application/json"},
+            "https://openrouter.ai/api/v1/chat/completions",
+            headers={"Authorization": f"Bearer {openrouter_key}", "Content-Type": "application/json"},
             json={
-                "model": "qwen/qwen3.6-27b",
+                "model": "google/gemini-2.5-flash",
                 "messages": [{"role": "user", "content": f"Translate this Arabic medical query to precise English for searching clinical guidelines. Output ONLY the English translation, nothing else.\n\nArabic: {query}"}],
                 "temperature": 0,
                 "max_tokens": 150,
             },
             timeout=15,
         )
-        return resp.json()["choices"][0]["message"]["content"].strip()
+        result = resp.json()["choices"][0]["message"]["content"].strip()
+        return result if result else query
+    except Exception:
+        return query
     except Exception:
         return query
 
@@ -343,20 +346,53 @@ def load_embedder():
     if precomputed is not None:
         _, embeddings = precomputed
         dim = embeddings.shape[1]
-        if dim == 384:
+        if dim == 1536:
+            import requests as _req
+            OPENROUTER_KEY = os.environ.get("OPENROUTER_API_KEY", "")
+            class OpenRouterEmbedder:
+                API_URL = "https://openrouter.ai/api/v1/embeddings"
+                MODEL = "openai/text-embedding-3-small"
+                def __init__(self):
+                    self._session = _req.Session()
+                    self._session.headers.update({
+                        "Authorization": f"Bearer {OPENROUTER_KEY}",
+                        "Content-Type": "application/json",
+                    })
+                def encode(self, texts, normalize_embeddings=True, show_progress_bar=False, batch_size=32):
+                    if isinstance(texts, str):
+                        texts = [texts]
+                    all_emb = []
+                    for i in range(0, len(texts), batch_size):
+                        batch = texts[i:i+batch_size]
+                        for attempt in range(3):
+                            try:
+                                resp = self._session.post(self.API_URL, json={
+                                    "model": self.MODEL, "input": batch
+                                }, timeout=30)
+                                if resp.status_code == 429:
+                                    import time as _t; _t.sleep(2 * (attempt + 1)); continue
+                                resp.raise_for_status()
+                                data = resp.json()
+                                all_emb.extend([d["embedding"] for d in data.get("data", [])])
+                                break
+                            except Exception:
+                                import time as _t; _t.sleep(1)
+                        import time as _t; _t.sleep(0.1)
+                    import numpy as _np
+                    arr = _np.array(all_emb, dtype="float32")
+                    if normalize_embeddings and arr.ndim == 2 and arr.shape[0] > 0:
+                        norms = _np.linalg.norm(arr, axis=1, keepdims=True)
+                        arr = arr / _np.maximum(norms, 1e-8)
+                    return arr
+            return OpenRouterEmbedder()
+        elif dim == 384:
             from sentence_transformers import SentenceTransformer
             if "embedder" not in st.session_state:
                 st.session_state.embedder = SentenceTransformer("all-MiniLM-L6-v2")
             return st.session_state.embedder
-    # Fallback: try Jina API
-    if JINA_KEY:
-        # Jina fallback code...
-        pass
-    # Final fallback: local model
     from sentence_transformers import SentenceTransformer
     if "embedder" not in st.session_state:
         st.session_state.embedder = SentenceTransformer("all-MiniLM-L6-v2")
-    return st.session_state.embedder
     return st.session_state.embedder
 
 
@@ -488,15 +524,15 @@ def bm25_search_local(query: str, chunks: List[Dict[str, Any]],
         dsm_boost = 1.0
         if any(t in q_lower for t in ["dsm", "dsm-5", "dsm 5", "severity level"]):
             if "dsm5_asd" in doc_name.lower():
-                dsm_boost = 3.0  # Strong boost for ASD-specific diagnostic criteria
+                dsm_boost = 5.0  # Strong boost for ASD-specific diagnostic criteria
             elif "dsm5" in doc_name.lower():
-                dsm_boost = 1.2  # Mild boost for full DSM-5 translation
+                dsm_boost = 1.5  # Mild boost for full DSM-5 translation
 
         # Diagnostic criteria specific: heavily boost the focused ASD criteria doc
         diag_boost = 1.0
         if any(t in q_lower for t in ["diagnostic criteria", "symptom domains", "core symptom", "required for diagnosis"]):
             if "dsm5_asd" in doc_name.lower():
-                diag_boost = 3.0
+                diag_boost = 5.0
             elif "dsm5" in doc_name.lower():
                 diag_boost = 0.7  # Deprioritize the full translation
 
@@ -514,19 +550,25 @@ def bm25_search_local(query: str, chunks: List[Dict[str, Any]],
 
         # Eye-tracking specific
         eye_boost = 1.0
-        if any(t in q_lower for t in ["eye-track", "eye track", "eye tracking"]):
-            if "eye" in text and ("track" in text or "gaze" in text):
-                eye_boost = 1.8
+        if any(t in q_lower for t in ["eye-track", "eye track", "eye tracking", "visual biomarker", "gaze"]):
+            if "eye" in text:
+                eye_boost = 2.5
 
         # School/education specific
         school_boost = 1.0
-        if any(t in q_lower for t in ["school", "academic", "education", "المدرسة", "الدراسة"]):
-            if "school" in text or "academic" in text or "education" in text:
-                school_boost = 1.5
+        if any(t in q_lower for t in ["school", "academic", "education", "classroom"]):
+            if "school" in doc_name.lower() or "school" in text or "academic" in text:
+                school_boost = 3.0
+
+        # FDA/medication specific
+        fda_boost = 1.0
+        if any(t in q_lower for t in ["fda", "fda-approved", "medication", "drug"]):
+            if "psychotropic" in doc_name.lower() or "fda" in text:
+                fda_boost = 2.0
 
         # Alternative/complementary treatment: boost safety warnings
         alt_boost = 1.0
-        if any(t in q_lower for t in ["alternative", "complementary", "cure", "روك顶", "tylenol"]):
+        if any(t in q_lower for t in ["alternative", "complementary", "cure"]):
             if any(t in text for t in ["alternative", "complementary", "unproven", "not recommended", "lack of evidence"]):
                 alt_boost = 1.5
 
@@ -537,7 +579,7 @@ def bm25_search_local(query: str, chunks: List[Dict[str, Any]],
             if phrase in q_lower and phrase in text:
                 phrase_boost += 0.3
 
-        score = max(coverage, expanded_coverage * 0.7) * name_boost * nice_boost * dsm_boost * diag_boost * aap_boost * mchat_boost * eye_boost * school_boost * alt_boost * phrase_boost
+        score = max(coverage, expanded_coverage * 0.7) * name_boost * nice_boost * dsm_boost * diag_boost * aap_boost * mchat_boost * eye_boost * school_boost * fda_boost * alt_boost * phrase_boost
         scored.append((score, i))
 
     scored.sort(key=lambda x: x[0], reverse=True)
@@ -589,7 +631,7 @@ _SYNONYM_MAP = {
 
 
 def _deduplicate_max1_per_doc(chunks: List[Dict[str, Any]], top_k: int,
-                              max_per_doc: int = 2) -> List[Dict[str, Any]]:
+                              max_per_doc: int = 3) -> List[Dict[str, Any]]:
     """Enforce max N chunks per document. Prevents duplicate section dominance."""
     doc_counts: Dict[str, int] = {}
     seen_sections: set = set()

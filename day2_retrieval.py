@@ -81,22 +81,23 @@ import requests as _requests
 
 def _runtime_arabic_to_english(query: str) -> str:
     """Translate Arabic medical query to English using LLM at runtime."""
-    groq_key = os.environ.get("GROQ_API_KEY", "")
-    if not groq_key:
+    openrouter_key = os.environ.get("OPENROUTER_API_KEY", "")
+    if not openrouter_key:
         return query
     try:
         resp = _requests.post(
-            "https://api.groq.com/openai/v1/chat/completions",
-            headers={"Authorization": f"Bearer {groq_key}", "Content-Type": "application/json"},
+            "https://openrouter.ai/api/v1/chat/completions",
+            headers={"Authorization": f"Bearer {openrouter_key}", "Content-Type": "application/json"},
             json={
-                "model": "allam-2-7b",
-                "messages": [{"role": "user", "content": f"Translate this Arabic medical query to precise English for searching clinical guidelines. Output ONLY the English translation, nothing else.\n\nArabic: {query}\n\n/no_think"}],
+                "model": "google/gemini-2.5-flash",
+                "messages": [{"role": "user", "content": f"Translate this Arabic medical query to precise English for searching clinical guidelines. Output ONLY the English translation, nothing else.\n\nArabic: {query}"}],
                 "temperature": 0,
                 "max_tokens": 150,
             },
             timeout=15,
         )
-        return resp.json()["choices"][0]["message"]["content"].strip()
+        result = resp.json()["choices"][0]["message"]["content"].strip()
+        return result if result else query
     except Exception as e:
         logger.warning(f"Runtime Arabic translation failed: {e}")
         return query
