@@ -1945,7 +1945,7 @@ st.markdown(f"""
     <div>
       <div class="hero-title">
         🔬 <span style="background:linear-gradient(135deg,#e8f6ff,#a0d8f8);-webkit-background-clip:text;-webkit-text-fill-color:transparent">Spectrum</span><span style="background:linear-gradient(135deg,#00c875,#34d399);-webkit-background-clip:text;-webkit-text-fill-color:transparent">Lens</span>
-        <span style="font-size:1rem;color:#4a6a8a;font-weight:400;-webkit-text-fill-color:#4a6a8a"> &nbsp;نطاق الطيف</span>
+        <span style="font-size:1rem;color:#4a6a8a;font-weight:400;-webkit-text-fill-color:#4a6a8a"> &nbsp;</span>
       </div>
       <div class="hero-sub">ASD Clinical Decision Support &nbsp;·&nbsp; Zero-Hallucination &nbsp;·&nbsp; Bilingual EN/AR &nbsp;·&nbsp; 3 LLM Providers</div>
     </div>
