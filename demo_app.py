@@ -841,9 +841,10 @@ def detect_unsupported_claims(answer: str, chunks: List[Dict]) -> List[str]:
         sent = sent.strip()
         if not sent or len(sent) < 20:
             continue
-        if "[SOURCE:" in sent:
-            continue  # Already cited
-        if any(kw in sent.lower() for kw in ["disclaimer", "not a substitute", "general guideline"]):
+        # Skip sentences with any citation format
+        if "[SOURCE:" in sent or "【Source" in sent:
+            continue
+        if any(kw in sent.lower() for kw in ["disclaimer", "not a substitute", "general guideline", "clinical decision", "professional medical"]):
             continue
         # Check if key terms from sentence appear in evidence
         key_terms = set(re.findall(r'\b[a-z]{4,}\b', sent.lower()))
@@ -1484,7 +1485,7 @@ with tab_search:
                     auth_badge = '<span style="background:#8ba6c030;color:#8ba6c0;padding:2px 8px;border-radius:10px;font-size:0.72rem;font-weight:600;margin-left:6px">📄 Toolkit</span>'
                 st.markdown(f"""
                 <div class="{cls}">
-                  <div class="ev-rank">Rank #{i+1}{top_lbl}</div>
+                  <div class="ev-rank">Evidence #{i+1} — Rank #{i+1}{top_lbl}</div>
                   <div class="ev-title">
                     📄 {chunk['document_name']}
                     <span class="pill {sc}">sim {chunk.get('similarity', 0):.3f}</span>
@@ -1577,7 +1578,8 @@ with tab_search:
             if verdict == "SUFFICIENT" and results:
                 st.markdown("---")
                 st.markdown("## 🛡️ Safety & Grounding Metrics")
-                citations_found = re.findall(r'\[SOURCE:.*?\]', full_answer)
+                # Match both old [SOURCE: ...] and new 【Source N】 formats
+                citations_found = re.findall(r'【Source \d+】|\[SOURCE:.*?\]', full_answer)
                 unique_cited_docs = len(set(c.lower()[:20] for c in citations_found))
                 top_sim = max(c.get("similarity", 0) for c in results)
                 confidence = estimate_confidence(results, full_answer)

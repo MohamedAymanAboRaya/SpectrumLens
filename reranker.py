@@ -302,21 +302,15 @@ class ClinicalReranker:
         self.top_n = top_n
         self.rerank_threshold = rerank_threshold
 
-        if os.environ.get("JINA_API_KEY"):
-            logger.info("Reranker backend: Jina AI Reranker v3.5 (API)")
-            self._backend = JinaReranker()
-            if self.rerank_threshold is None:
-                self.rerank_threshold = 0.05
-        elif os.environ.get("COHERE_API_KEY"):
+        # Skip Jina (credits exhausted) — go straight to local CrossEncoder
+        if os.environ.get("COHERE_API_KEY"):
             logger.info("Reranker backend: Cohere Rerank v3")
             self._backend = CohereReranker()
-            # Default threshold for Cohere (0-1 scores)
             if self.rerank_threshold is None:
                 self.rerank_threshold = 0.40
         else:
-            logger.info("Reranker backend: Local CrossEncoder (bge-reranker-v2-m3 / ms-marco fallback)")
+            logger.info("Reranker backend: Local CrossEncoder (ms-marco-MiniLM-L-6-v2)")
             self._backend = LocalCrossEncoderReranker()
-            # Local scores are logits — no hard threshold; rely on top_n only
             if self.rerank_threshold is None:
                 self.rerank_threshold = float("-inf")
 

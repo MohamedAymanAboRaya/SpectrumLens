@@ -56,35 +56,39 @@ def verify_answer(answer: str, retrieved_chunks: List[Dict[str, Any]]) -> Citati
     """
     Three-tier citation verification.
     
-    Tier 1: Structural — find all [SOURCE: ...] patterns
+    Tier 1: Structural — find all citation patterns (both [SOURCE: ...] and 【Source N】)
     Tier 2: Retrieval binding — check citations exist in retrieved set
     Tier 3: Claim grounding — check sentence overlap with cited chunks
     """
     result = CitationVerification()
     
-    # Tier 1: Structural parsing
-    citation_pattern = r'\[SOURCE:\s*([^\]]+)\]'
-    citations = re.findall(citation_pattern, answer)
-    result.total_citations = len(citations)
+    # Tier 1: Structural parsing — support both formats
+    citation_pattern_old = r'\[SOURCE:\s*([^\]]+)\]'
+    citation_pattern_new = r'【Source (\d+)】'
+    citations_old = re.findall(citation_pattern_old, answer)
+    citations_new = re.findall(citation_pattern_new, answer)
+    result.total_citations = len(citations_old) + len(citations_new)
     
     # Build retrieval index
     chunk_index = {}
-    for chunk in retrieved_chunks:
+    for i, chunk in enumerate(retrieved_chunks):
         chunk_id = chunk.get("chunk_id", "")
         doc_name = chunk.get("document_name", "").lower()
         section = chunk.get("section_title", "").lower()
         content = chunk.get("content") or chunk.get("text") or chunk.get("original_text") or ""
         chunk_index[chunk_id] = {"doc": doc_name, "section": section, "content": content}
         chunk_index[doc_name] = chunk_index[chunk_id]
+        # Map Source N → chunk index
+        chunk_index[f"source_{i+1}"] = chunk_index[chunk_id]
     
     # Tier 2: Retrieval binding — check if citation text mentions any retrieved doc/section
-    for cite in citations:
+    # Handle both old [SOURCE: ...] and new 【Source N】 formats
+    for cite in citations_old:
         cite_lower = cite.strip().lower()
         found = False
         for key, info in chunk_index.items():
             doc = info.get("doc", "")
             section = info.get("section", "")
-            # Match if citation mentions the doc name or section
             if (doc and doc in cite_lower) or (section and section in cite_lower) or \
                (cite_lower in str(key).lower()) or (cite_lower in doc):
                 found = True
@@ -95,13 +99,26 @@ def verify_answer(answer: str, retrieved_chunks: List[Dict[str, Any]]) -> Citati
             result.hallucinated_citations += 1
             result.missing_citations.append(cite.strip())
     
+    # New format: 【Source N】 — validate by index
+    for source_num in citations_new:
+        key = f"source_{source_num}"
+        if key in chunk_index:
+            result.valid_citations += 1
+        else:
+            result.hallucinated_citations += 1
+            result.missing_citations.append(f"Source {source_num}")
+    
     # Tier 3: Claim grounding
     sentences = _split_into_sentences(answer)
     result.total_sentences = len(sentences)
     
     for sentence in sentences:
-        # Skip citation-only sentences
-        if re.match(r'^\[SOURCE:.*\]$', sentence.strip()):
+        # Skip citation-only sentences and disclaimer sentences
+        if re.match(r'^\[SOURCE:.*\]$', sentence.strip()) or \
+           re.match(r'^【Source \d+】', sentence.strip()):
+            result.grounded_sentences += 1
+            continue
+        if any(kw in sentence.lower() for kw in ["disclaimer", "not a substitute", "clinical decision", "professional medical"]):
             result.grounded_sentences += 1
             continue
         
