@@ -310,8 +310,8 @@ OUTPUT STRUCTURE (use this EXACT format):
 [Direct, evidence-based answer. Every sentence MUST cite a source using 【Source N】. Example: The AAP recommends universal ASD screening at 18 months 【Source 1】. Write 3-7 sentences with inline citations throughout.]
 
 📚 **Supporting Evidence**
-• 【Source 1】 Document Name — Section Title (Page X)
-• 【Source 2】 Document Name — Section Title (Page X)
+• 【Source 1】 Document Name — Section Title (Page X) [chunk_id]
+• 【Source 2】 Document Name — Section Title (Page X) [chunk_id]
 
 🎯 **Confidence Level**: [HIGH / MEDIUM / LOW / INSUFFICIENT]
 - HIGH: Multiple authoritative sources agree
@@ -327,6 +327,7 @@ RULES:
 - Never invent, assume, or hallucinate any clinical fact
 - If you cannot fully answer from context, state what IS supported and what is NOT
 - Use 【Source N】 format for inline citations — N corresponds to the evidence list above
+- Include the chunk_id in brackets at the end of each evidence citation
 
 /no_think"""
 
@@ -346,8 +347,8 @@ RULES:
 [إجابة مباشرة مبنية على الأدلة. كل جملة يجب أن تستشهد بمصدر باستخدام 【Source N】. مثال: توصي AAP بفحص التوحد الشامل عند عمر 18 شهراً 【Source 1】. اكتب 3-7 جمل مع اقتباسات مضمنة.]
 
 📚 **الأدلة الداعمة**
-• 【Source 1】 اسم المستند — عنوان القسم (صفحة X)
-• 【Source 2】 اسم المستند — عنوان القسم (صفحة X)
+• 【Source 1】 اسم المستند — عنوان القسم (صفحة X) [chunk_id]
+• 【Source 2】 اسم المستند — عنوان القسم (صفحة X) [chunk_id]
 
 🎯 **مستوى الثقة**: [HIGH / MEDIUM / LOW / INSUFFICIENT]
 - HIGH: مصادر رسمية متعددة تتفق
@@ -380,6 +381,7 @@ RULES:
         context = "\n\n".join(
             f"[EVIDENCE {i+1}] document_name: {c.document_name}\n"
             f"section_title: {c.section_title}\npage_number: {c.page_number}\n"
+            f"chunk_id: {c.chunk_id}\n"
             f"content: {c.content}"
             for i, c in enumerate(chunks)
         )

@@ -77,6 +77,28 @@ html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
     background:#0f1e2d; border:1px solid rgba(0,200,117,0.25);
     border-radius:12px; padding:1.5rem; line-height:1.7; color:#d4eaf8;
 }
+.answer-box .citation-link {
+    display:inline-block; background:rgba(0,200,117,0.15); color:#00c875;
+    padding:1px 6px; border-radius:4px; font-size:0.82rem; font-weight:600;
+    text-decoration:none; cursor:pointer; transition:all 0.2s;
+    border:1px solid rgba(0,200,117,0.3); margin:0 2px;
+}
+.answer-box .citation-link:hover {
+    background:rgba(0,200,117,0.3); border-color:#00c875;
+    box-shadow:0 0 8px rgba(0,200,117,0.3);
+}
+.answer-box .citation-link::before { content:"📎 "; font-size:0.7rem; }
+.citation-tooltip {
+    position:relative; display:inline-block;
+}
+.citation-tooltip .tip-content {
+    display:none; position:absolute; bottom:125%; left:50%; transform:translateX(-50%);
+    background:#1a2332; border:1px solid #2a3a4a; border-radius:8px;
+    padding:8px 12px; font-size:0.75rem; color:#c0d8ec; width:280px;
+    box-shadow:0 4px 12px rgba(0,0,0,0.4); z-index:100;
+}
+.citation-tooltip:hover .tip-content { display:block; }
+.ev-card { scroll-margin-top:80px; }
 .stop-box {
     background:#1f0e0e; border:1px solid rgba(224,82,82,0.4);
     border-radius:12px; padding:1.5rem; color:#f9c0c0;
@@ -905,45 +927,54 @@ GENERATOR_PROMPT_EN = """You are SpectrumLens, an evidence-grounded clinical dec
 
 RULES:
 1. Use ONLY the retrieved guideline context below. Do not use external knowledge.
-2. Every factual claim MUST be traceable to a retrieved chunk with citation: [SOURCE: Document, Section, page N]
+2. Every factual claim MUST be traceable to a retrieved chunk with citation: 【Source N】 where N matches the evidence number.
 3. Copy document_name, section_title, page EXACTLY from evidence chunks.
 4. If context does not support the answer, state evidence is insufficient.
 5. Do not provide patient-specific diagnosis, treatment, or dosage.
 6. Remove or soften any claim you cannot link to retrieved evidence.
 
-STRUCTURED ANSWER FORMAT:
-**Recommendation**
-[Short, direct answer based only on retrieved chunks. 2-4 sentences.]
+OUTPUT STRUCTURE (use this EXACT format):
 
-**Supporting Evidence**
-• [Citation] — key excerpt or finding
-• [Citation] — key excerpt or finding
+📋 **Answer**
+[Direct, evidence-based answer. Every sentence MUST cite a source using 【Source N】. Write 3-7 sentences with inline citations throughout. Be specific, cite exact findings.]
 
-**Confidence Level** [HIGH / MEDIUM / LOW / INSUFFICIENT]
-[Brief reason: retrieval score, evidence match quality, citation coverage]
+📚 **Supporting Evidence**
+• 【Source 1】 Document Name — Section Title (Page X) [chunk_id]
+• 【Source 2】 Document Name — Section Title (Page X) [chunk_id]
 
-⚕️ *This is general guideline information for clinical decision support. Not a substitute for professional medical advice.*"""
+🎯 **Confidence Level**: [HIGH / MEDIUM / LOW / INSUFFICIENT]
+- HIGH: Multiple authoritative sources agree, top similarity > 0.55
+- MEDIUM: Single authoritative source or moderate agreement
+- LOW: Limited or conflicting evidence
+- INSUFFICIENT: No relevant evidence found
+
+⚕️ *This output is generated from clinical guidelines for decision support only. It does not replace professional medical judgment. Consult a qualified healthcare provider for clinical decisions.*"""
 
 GENERATOR_PROMPT_AR = """أنت SpectrumLens، مساعد دعم القرار السريري المبني على الأدلة لاضطراب طيف التوحد (ASD).
 
 قواعد:
 1. استخدم فقط سياق الإرشادات المسترجع أدناه. لا تستخدم معرفاً خارجياً.
-2. كل ادعاء وقائي يجب أن يكون قابلاً للتتبع إلى قطعة مسترجعة مع اقتباس: [SOURCE: Document, Section, page N]
+2. كل ادعاء وقائي يجب أن يكون قابلاً للتتبع إلى قطعة مسترجعة مع اقتباس: 【Source N】 حيث N يتطابق مع رقم الدليل.
 3. انسخ document_name, section_title, page بدقة من قطع الأدلة.
 4. إذا لم يدعم السياق الإجابة، قل إن الأدلة غير كافية.
 5. لا تقدم تشخيصاً أو علاجاً أو جرعات محددة للمريض.
 
 تنسيق الإجابة المهيكل:
-**التوصية**
-[إجابة قصيرة ومباشرة مبنية فقط على قطع الأدلة المسترجعة.]
 
-**الأدلة الداعمة**
-• [Citation] — مقتطف رئيسي أو نتيجة
+📋 **الإجابة**
+[إجابة مباشرة مبنية على الأدلة. كل جملة يجب أن تستشهد بمصدر باستخدام 【Source N】. اكتب 3-7 جمل مع اقتباسات مضمنة.]
 
-**مستوى الثقة** [HIGH / MEDIUM / LOW / INSUFFICIENT]
-[سبب موجز: نتيجة الاسترجاع، جودة تطابق الأدلة، تغطية الاقتباسات]
+📚 **الأدلة الداعمة**
+• 【Source 1】 اسم المستند — عنوان القسم (صفحة X) [chunk_id]
+• 【Source 2】 اسم المستند — عنوان القسم (صفحة X) [chunk_id]
 
-⚕️ *معلومات إرشادية عامة لدعم القرار السريري. ليست بديلاً عن المشورة الطبية المتخصصة.*"""
+🎯 **مستوى الثقة** [HIGH / MEDIUM / LOW / INSUFFICIENT]
+- HIGH: مصادر رسمية متعددة تتفق، تشابه أعلى من 0.55
+- MEDIUM: مصدر رسمي واحد أو اتفاق معقول
+- LOW: أدلة محدودة أو متعارضة
+- INSUFFICIENT: لم يتم العثور على أدلة ذات صلة
+
+⚕️ *هذا الإخراج تم إنشاؤه من إرشادات سريرية لدعم القرار فقط. لا يحل محل الحكم الطبي المهني. استشر مقدم رعاية صحة مؤهل للقرارات السريرية.*"""
 
 
 import re as _re
@@ -1119,6 +1150,7 @@ def groq_generate_stream(query: str, chunks: List[Dict]):
     context = "\n\n".join(
         f"[EVIDENCE {i+1}]\nDocument: {c['document_name']}\n"
         f"Section: {c['section_title']}\nPage: {c['page_number']}\n"
+        f"Chunk ID: {c.get('chunk_id', 'N/A')}\n"
         f"Content: {(c.get('original_text') or c.get('text', ''))[:600]}"
         for i, c in enumerate(chunks)
     )
@@ -1213,6 +1245,56 @@ def _inject_citations(answer: str, chunks: List[Dict], query: str) -> str:
             cited_sentences.append(sent)
 
     return " ".join(cited_sentences)
+
+
+def _render_citations_html(answer: str, chunks: List[Dict]) -> str:
+    """Convert 【Source N】 and [SOURCE: ...] citations to clickable HTML links."""
+    import re as _re
+
+    # Build source info map: index -> (doc, section, page, chunk_id, sim, excerpt)
+    source_map = {}
+    for i, c in enumerate(chunks):
+        source_map[i + 1] = {
+            "doc": c.get("document_name", "Unknown"),
+            "section": c.get("section_title", ""),
+            "page": c.get("page_number", "?"),
+            "chunk_id": c.get("chunk_id", ""),
+            "sim": c.get("similarity", 0),
+            "excerpt": (c.get("original_text") or c.get("text", ""))[:150],
+        }
+
+    def _replace_source_n(match):
+        n = int(match.group(1))
+        info = source_map.get(n)
+        if not info:
+            return match.group(0)
+        sim = info["sim"]
+        color = "#00c875" if sim >= 0.55 else "#f59e0b" if sim >= 0.40 else "#e05252"
+        tooltip_text = f"{info['doc']} — {info['section']} (p.{info['page']})\\nsim: {sim:.3f}\\n{info['excerpt']}"
+        anchor_id = f"ev-{n}"
+        return (f'<a href="#{anchor_id}" class="citation-link" '
+                f'title="{tooltip_text}" '
+                f'style="color:{color};border-color:{color}40">'
+                f'Source {n}</a>')
+
+    # Replace 【Source N】 format
+    result = _re.sub(r'【Source (\d+)】', _replace_source_n, answer)
+
+    # Replace [SOURCE: doc, section, page] format
+    def _replace_source_old(match):
+        content = match.group(1)
+        for idx, info in source_map.items():
+            if info["doc"][:15].lower() in content.lower():
+                sim = info["sim"]
+                color = "#00c875" if sim >= 0.55 else "#f59e0b" if sim >= 0.40 else "#e05252"
+                anchor_id = f"ev-{idx}"
+                return (f'<a href="#{anchor_id}" class="citation-link" '
+                        f'style="color:{color};border-color:{color}40">'
+                        f'Source {idx}</a>')
+        return match.group(0)
+
+    result = _re.sub(r'\[SOURCE:\s*(.*?)\]', _replace_source_old, result)
+    return result
 
 
 # ─── SIDEBAR ─────────────────────────────────────────────────────────────────
@@ -1426,19 +1508,33 @@ with tab_search:
         embedder = load_embedder()
         index, idx_dim = build_index(len(chunks_data))   # cache key = number of chunks
 
-        # ── Retrieve ─────────────────────────────────────────────────────────
-        with st.spinner(f"🔎 Searching clinical guidelines ({search_mode} mode)…"):
-            t0 = time.perf_counter()
-            if search_mode == "hybrid":
-                results = hybrid_search(query, embedder, index, chunks_data, top_k=top_k,
-                                        threshold=thresh, language_filter=lang_code)
-            elif search_mode == "semantic":
-                results = cosine_search(query, embedder, index, chunks_data, top_k=top_k,
-                                        threshold=thresh, language_filter=lang_code)
-            else:  # bm25
-                results = bm25_search_local(query, chunks_data, top_k=top_k,
-                                            language_filter=lang_code)
-            ms = (time.perf_counter()-t0)*1000
+        # ── Query cache for speed ──
+        if "query_cache" not in st.session_state:
+            st.session_state.query_cache = {}
+        cache_key = f"{query}|{search_mode}|{top_k}|{thresh}|{lang_code}"
+        cached = st.session_state.query_cache.get(cache_key)
+
+        if cached:
+            results, ms = cached
+        else:
+            # ── Retrieve ─────────────────────────────────────────────────────
+            with st.spinner(f"🔎 Searching clinical guidelines ({search_mode} mode)…"):
+                t0 = time.perf_counter()
+                if search_mode == "hybrid":
+                    results = hybrid_search(query, embedder, index, chunks_data, top_k=top_k,
+                                            threshold=thresh, language_filter=lang_code)
+                elif search_mode == "semantic":
+                    results = cosine_search(query, embedder, index, chunks_data, top_k=top_k,
+                                            threshold=thresh, language_filter=lang_code)
+                else:  # bm25
+                    results = bm25_search_local(query, chunks_data, top_k=top_k,
+                                                language_filter=lang_code)
+                ms = (time.perf_counter()-t0)*1000
+                # Cache results (keep max 20 entries)
+                st.session_state.query_cache[cache_key] = (results, ms)
+                if len(st.session_state.query_cache) > 20:
+                    oldest = next(iter(st.session_state.query_cache))
+                    del st.session_state.query_cache[oldest]
 
         # ── Two-Stage Reranking (optional) ─────────────────────────────────
         reranker_ms = 0
@@ -1513,7 +1609,7 @@ with tab_search:
                 # Similarity bar width
                 sim_pct = int(min(sim, 1.0) * 100)
                 st.markdown(f"""
-                <div class="{cls}">
+                <div class="{cls}" id="ev-{i+1}">
                   <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
                     <div class="ev-rank" style="margin:0">Evidence #{i+1}{top_lbl}</div>
                     <div style="flex:1;height:4px;background:#1e293b;border-radius:2px;overflow:hidden">
@@ -1592,12 +1688,34 @@ with tab_search:
             elif verdict == "SKIPPED":
                 st.info(full_answer)
             else:
-                st.markdown(f'<div class="answer-box">{full_answer}</div>', unsafe_allow_html=True)
-                # Copy button
+                # Render citations as clickable links
+                answer_html = _render_citations_html(full_answer, results)
+                st.markdown(f'<div class="answer-box">{answer_html}</div>', unsafe_allow_html=True)
+                # Copy button (plain text)
                 st.button("📋 Copy Answer", key=f"copy_{query[:20]}",
                           on_click=lambda: st.session_state.update({"_copy_text": full_answer}))
                 if st.session_state.get("_copy_text"):
                     st.code(st.session_state._copy_text[:200])
+
+                # ── Sources Cited mini-cards ──
+                import re as _re
+                cited_indices = set(int(x) for x in _re.findall(r'Source (\d+)', full_answer))
+                if cited_indices:
+                    st.markdown("**📎 Sources Cited:**")
+                    cols = st.columns(min(len(cited_indices), 3))
+                    for ci, idx in enumerate(sorted(cited_indices)):
+                        if idx - 1 < len(results):
+                            c = results[idx - 1]
+                            sim = c.get("similarity", 0)
+                            color = "#00c875" if sim >= 0.55 else "#f59e0b" if sim >= 0.40 else "#e05252"
+                            with cols[ci % len(cols)]:
+                                st.markdown(f"""
+                                <div style="background:#0d1b2a;border:1px solid {color}30;border-radius:8px;padding:8px 12px;margin-bottom:6px;font-size:0.78rem">
+                                  <div style="color:{color};font-weight:700;margin-bottom:2px">Source {idx} · sim {sim:.3f}</div>
+                                  <div style="color:#8ba6c0">{c.get('document_name','')[:40]}</div>
+                                  <div style="color:#5a7a9a;font-size:0.7rem">{c.get('section_title','')[:35]} · p.{c.get('page_number','?')}</div>
+                                </div>
+                                """, unsafe_allow_html=True)
 
             # ── Chat History ──
             if "history" not in st.session_state:
