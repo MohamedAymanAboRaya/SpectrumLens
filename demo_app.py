@@ -931,24 +931,25 @@ RULES:
 3. Copy document_name, section_title, page EXACTLY from evidence chunks.
 4. If context does not support the answer, state evidence is insufficient.
 5. Do not provide patient-specific diagnosis, treatment, or dosage.
-6. Remove or soften any claim you cannot link to retrieved evidence.
 
-OUTPUT STRUCTURE (use this EXACT format):
+OUTPUT FORMAT (follow EXACTLY — each section on its own line, no extra bullet points):
 
 📋 **Answer**
-[Direct, evidence-based answer. Every sentence MUST cite a source using 【Source N】. Write 3-7 sentences with inline citations throughout. Be specific, cite exact findings.]
+[2-5 sentences. Direct, evidence-based. Every sentence MUST cite a source using 【Source N】.]
 
 📚 **Supporting Evidence**
 • 【Source 1】 Document Name — Section Title (Page X) [chunk_id]
 • 【Source 2】 Document Name — Section Title (Page X) [chunk_id]
 
-🎯 **Confidence Level**: [HIGH / MEDIUM / LOW / INSUFFICIENT]
+🎯 **Confidence**: HIGH
+
+⚕️ This output is generated from clinical guidelines for decision support only. It does not replace professional medical judgment. Consult a qualified healthcare provider for clinical decisions.
+
+RULES FOR CONFIDENCE:
 - HIGH: Multiple authoritative sources agree, top similarity > 0.55
 - MEDIUM: Single authoritative source or moderate agreement
 - LOW: Limited or conflicting evidence
-- INSUFFICIENT: No relevant evidence found
-
-⚕️ *This output is generated from clinical guidelines for decision support only. It does not replace professional medical judgment. Consult a qualified healthcare provider for clinical decisions.*"""
+- INSUFFICIENT: No relevant evidence found"""
 
 GENERATOR_PROMPT_AR = """أنت SpectrumLens، مساعد دعم القرار السريري المبني على الأدلة لاضطراب طيف التوحد (ASD).
 
@@ -959,22 +960,24 @@ GENERATOR_PROMPT_AR = """أنت SpectrumLens، مساعد دعم القرار ا
 4. إذا لم يدعم السياق الإجابة، قل إن الأدلة غير كافية.
 5. لا تقدم تشخيصاً أو علاجاً أو جرعات محددة للمريض.
 
-تنسيق الإجابة المهيكل:
+تنسيق الإجابة (اتبع هذا التنسيق بالضبط — كل قسم في سطر منفصل):
 
 📋 **الإجابة**
-[إجابة مباشرة مبنية على الأدلة. كل جملة يجب أن تستشهد بمصدر باستخدام 【Source N】. اكتب 3-7 جمل مع اقتباسات مضمنة.]
+[2-5 جمل. إجابة مباشرة مبنية على الأدلة. كل جملة يجب أن تستشهد بمصدر باستخدام 【Source N】.]
 
 📚 **الأدلة الداعمة**
 • 【Source 1】 اسم المستند — عنوان القسم (صفحة X) [chunk_id]
 • 【Source 2】 اسم المستند — عنوان القسم (صفحة X) [chunk_id]
 
-🎯 **مستوى الثقة** [HIGH / MEDIUM / LOW / INSUFFICIENT]
+🎯 **الثقة**: HIGH
+
+⚕️ هذا الإخراج تم إنشاؤه من إرشادات سريرية لدعم القرار فقط. لا يحل محل الحكم الطبي المهني. استشر مقدم رعاية صحة مؤهل للقرارات السريرية.
+
+قواعد الثقة:
 - HIGH: مصادر رسمية متعددة تتفق، تشابه أعلى من 0.55
 - MEDIUM: مصدر رسمي واحد أو اتفاق معقول
 - LOW: أدلة محدودة أو متعارضة
-- INSUFFICIENT: لم يتم العثور على أدلة ذات صلة
-
-⚕️ *هذا الإخراج تم إنشاؤه من إرشادات سريرية لدعم القرار فقط. لا يحل محل الحكم الطبي المهني. استشر مقدم رعاية صحة مؤهل للقرارات السريرية.*"""
+- INSUFFICIENT: لم يتم العثور على أدلة ذات صلة"""
 
 
 import re as _re
@@ -1295,6 +1298,98 @@ def _render_citations_html(answer: str, chunks: List[Dict]) -> str:
 
     result = _re.sub(r'\[SOURCE:\s*(.*?)\]', _replace_source_old, result)
     return result
+
+
+def _parse_answer_sections(raw: str) -> dict:
+    """Parse LLM answer into structured sections for clean rendering."""
+    import re as _re
+    sections = {"answer": "", "evidence_list": "", "confidence": "MEDIUM", "disclaimer": ""}
+
+    # Remove the confidence badge line appended by groq_generate_stream
+    raw = _re.sub(r'\n*---\n*\*\*Confidence:\*\*.*$', '', raw, flags=_re.DOTALL)
+    raw = _re.sub(r'\n*⚠️.*claim.*unsupported.*$', '', raw)
+
+    # Extract 📋 Answer section
+    ans_match = _re.search(r'(?:📋|Answer|الإجابة)\s*\*\*\s*\n(.*?)(?=📚|Supporting|الأدلة|🎯|Confidence|مستوى)', raw, _re.DOTALL)
+    if ans_match:
+        sections["answer"] = ans_match.group(1).strip()
+    else:
+        # Fallback: take everything before the evidence list
+        parts = _re.split(r'(?:📚|Supporting|الأدلة)', raw, maxsplit=1)
+        sections["answer"] = parts[0].strip()
+
+    # Extract 📚 Evidence list
+    ev_match = _re.search(r'(?:📚|Supporting|الأدلة)\s*\*\*\s*\n(.*?)(?=🎯|Confidence|مستوى|⚕️|Disclaimer|إخلاء|$)', raw, _re.DOTALL)
+    if ev_match:
+        sections["evidence_list"] = ev_match.group(1).strip()
+
+    # Extract confidence level
+    conf_match = _re.search(r'(?:🎯|Confidence|مستوى)[^:]*:\s*\*?\*?\s*(HIGH|MEDIUM|LOW|INSUFFICIENT)', raw, _re.IGNORECASE)
+    if conf_match:
+        sections["confidence"] = conf_match.group(1).upper()
+
+    # Extract disclaimer
+    disc_match = _re.search(r'(?:⚕️|Disclaimer|إخلاء)(.*?)(?:$)', raw, _re.DOTALL)
+    if disc_match:
+        sections["disclaimer"] = disc_match.group(1).strip().strip('*').strip('"').strip()
+
+    return sections
+
+
+def _render_structured_answer(raw: str, chunks: List[Dict]) -> str:
+    """Render LLM answer as clean HTML with separate styled blocks."""
+    import re as _re
+    sections = _parse_answer_sections(raw)
+    answer_text = _render_citations_html(sections["answer"], chunks)
+    ev_list = sections["evidence_list"]
+    conf = sections["confidence"]
+    disclaimer = sections["disclaimer"]
+
+    conf_colors = {"HIGH": "#00c875", "MEDIUM": "#f59e0b", "LOW": "#ef4444", "INSUFFICIENT": "#6b7280"}
+    conf_color = conf_colors.get(conf, "#6b7280")
+
+    # Parse evidence list into clean rows
+    ev_rows = ""
+    for line in ev_list.split('\n'):
+        line = line.strip()
+        if not line or line.startswith('🎯') or line.startswith('HIGH') or line.startswith('MEDIUM'):
+            continue
+        # Clean up the line — remove raw markdown
+        line = _re.sub(r'^[\-•\d\.]+\s*', '', line)
+        if line:
+            ev_rows += f'<div style="padding:4px 0;color:#c0d8ec;font-size:0.85rem;border-bottom:1px solid #1a2332">{line}</div>\n'
+
+    html = f"""
+    <div style="margin-bottom:12px">
+      <div style="color:#8ba6c0;font-size:0.82rem;font-weight:600;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.5px">📋 Answer</div>
+      <div style="color:#d4eaf8;line-height:1.8;font-size:0.92rem">{answer_text}</div>
+    </div>
+    """
+
+    if ev_rows:
+        html += f"""
+    <div style="margin-bottom:12px;padding:12px;background:#0a1520;border-radius:8px;border:1px solid #1a2332">
+      <div style="color:#8ba6c0;font-size:0.82rem;font-weight:600;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.5px">📚 Supporting Evidence</div>
+      {ev_rows}
+    </div>
+    """
+
+    html += f"""
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+      <span style="color:#8ba6c0;font-size:0.82rem;font-weight:600;text-transform:uppercase;letter-spacing:0.5px">🎯 Confidence</span>
+      <span style="background:{conf_color}20;color:{conf_color};padding:3px 12px;border-radius:12px;font-size:0.82rem;font-weight:700;border:1px solid {conf_color}40">{conf}</span>
+    </div>
+    """
+
+    if disclaimer:
+        html += f"""
+    <div style="padding:10px 14px;background:#0a1520;border-left:3px solid #f59e0b;border-radius:0 8px 8px 0;margin-top:8px">
+      <div style="color:#f59e0b;font-size:0.78rem;font-weight:600;margin-bottom:2px">⚕️ Clinical Disclaimer</div>
+      <div style="color:#8ba6c0;font-size:0.8rem;font-style:italic">{disclaimer}</div>
+    </div>
+    """
+
+    return html
 
 
 # ─── SIDEBAR ─────────────────────────────────────────────────────────────────
@@ -1688,8 +1783,8 @@ with tab_search:
             elif verdict == "SKIPPED":
                 st.info(full_answer)
             else:
-                # Render citations as clickable links
-                answer_html = _render_citations_html(full_answer, results)
+                # Render structured answer with clean sections
+                answer_html = _render_structured_answer(full_answer, results)
                 st.markdown(f'<div class="answer-box">{answer_html}</div>', unsafe_allow_html=True)
                 # Copy button (plain text)
                 st.button("📋 Copy Answer", key=f"copy_{query[:20]}",
