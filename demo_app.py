@@ -1301,91 +1301,143 @@ def _render_citations_html(answer: str, chunks: List[Dict]) -> str:
 
 
 def _parse_answer_sections(raw: str) -> dict:
-    """Parse LLM answer into structured sections for clean rendering."""
+    """Robustly parse LLM answer into structured sections. Handles any LLM output format."""
     import re as _re
-    sections = {"answer": "", "evidence_list": "", "confidence": "MEDIUM", "disclaimer": ""}
+    sections = {"answer": "", "evidence_items": [], "confidence": "MEDIUM", "disclaimer": ""}
 
-    # Remove the confidence badge line appended by groq_generate_stream
+    # Strip appended confidence badge and unsupported warning from groq_generate_stream
     raw = _re.sub(r'\n*---\n*\*\*Confidence:\*\*.*$', '', raw, flags=_re.DOTALL)
-    raw = _re.sub(r'\n*⚠️.*claim.*unsupported.*$', '', raw)
+    raw = _re.sub(r'\n*⚠️\s*\d+\s*claim.*?evidence\.?$', '', raw, flags=_re.DOTALL)
 
-    # Extract 📋 Answer section
-    ans_match = _re.search(r'(?:📋|Answer|الإجابة)\s*\*\*\s*\n(.*?)(?=📚|Supporting|الأدلة|🎯|Confidence|مستوى)', raw, _re.DOTALL)
-    if ans_match:
-        sections["answer"] = ans_match.group(1).strip()
-    else:
-        # Fallback: take everything before the evidence list
-        parts = _re.split(r'(?:📚|Supporting|الأدلة)', raw, maxsplit=1)
-        sections["answer"] = parts[0].strip()
+    # ── Extract answer text (everything before evidence/confidence/disclaimer) ──
+    # Try multiple分割 patterns
+    answer_end = len(raw)
+    for pattern in [r'📚\s*\*\*Supporting', r'📚\s*\*\*الأدلة', r'\*\*Supporting Evidence\*\*',
+                    r'🎯\s*\*\*Confidence', r'🎯\s*\*\*الثقة', r'\*\*Confidence\*\*',
+                    r'⚕️\s*This output', r'⚕️\s*هذا الإخراج']:
+        m = _re.search(pattern, raw)
+        if m and m.start() < answer_end:
+            answer_end = m.start()
+    sections["answer"] = raw[:answer_end].strip()
 
-    # Extract 📚 Evidence list
-    ev_match = _re.search(r'(?:📚|Supporting|الأدلة)\s*\*\*\s*\n(.*?)(?=🎯|Confidence|مستوى|⚕️|Disclaimer|إخلاء|$)', raw, _re.DOTALL)
-    if ev_match:
-        sections["evidence_list"] = ev_match.group(1).strip()
+    # ── Extract evidence items ──
+    ev_patterns = [
+        r'【Source (\d+)】\s*(.*?)(?=【Source|\n\n|$)',
+        r'•\s*【Source (\d+)】\s*(.*?)(?=•|【Source|\n\n|$)',
+        r'\[\s*SOURCE:\s*(.*?)\]',
+    ]
+    for pat in ev_patterns:
+        for m in _re.finditer(pat, raw, _re.DOTALL):
+            if 'Source' in pat:
+                idx = int(m.group(1))
+                text = m.group(2).strip()
+            else:
+                idx = 0
+                text = m.group(1).strip()
+            sections["evidence_items"].append({"idx": idx, "text": text})
 
-    # Extract confidence level
-    conf_match = _re.search(r'(?:🎯|Confidence|مستوى)[^:]*:\s*\*?\*?\s*(HIGH|MEDIUM|LOW|INSUFFICIENT)', raw, _re.IGNORECASE)
+    # ── Extract confidence ──
+    conf_match = _re.search(r'(?:🎯|Confidence|الثقة)[^:]*:\s*\*?\*?\s*(HIGH|MEDIUM|LOW|INSUFFICIENT)', raw, _re.IGNORECASE)
     if conf_match:
         sections["confidence"] = conf_match.group(1).upper()
 
-    # Extract disclaimer
-    disc_match = _re.search(r'(?:⚕️|Disclaimer|إخلاء)(.*?)(?:$)', raw, _re.DOTALL)
+    # ── Extract disclaimer ──
+    disc_match = _re.search(r'⚕️\s*(.*?)(?:\n\n|$)', raw, _re.DOTALL)
     if disc_match:
-        sections["disclaimer"] = disc_match.group(1).strip().strip('*').strip('"').strip()
+        d = disc_match.group(1).strip().strip('*').strip('"').strip()
+        if len(d) > 20:
+            sections["disclaimer"] = d
 
     return sections
 
 
 def _render_structured_answer(raw: str, chunks: List[Dict]) -> str:
-    """Render LLM answer as clean HTML with separate styled blocks."""
+    """Render LLM answer as world-class structured HTML with clean sections."""
     import re as _re
     sections = _parse_answer_sections(raw)
-    answer_text = _render_citations_html(sections["answer"], chunks)
-    ev_list = sections["evidence_list"]
     conf = sections["confidence"]
-    disclaimer = sections["disclaimer"]
 
     conf_colors = {"HIGH": "#00c875", "MEDIUM": "#f59e0b", "LOW": "#ef4444", "INSUFFICIENT": "#6b7280"}
     conf_color = conf_colors.get(conf, "#6b7280")
+    conf_pct = {"HIGH": 95, "MEDIUM": 65, "LOW": 30, "INSUFFICIENT": 5}.get(conf, 50)
 
-    # Parse evidence list into clean rows
-    ev_rows = ""
-    for line in ev_list.split('\n'):
-        line = line.strip()
-        if not line or line.startswith('🎯') or line.startswith('HIGH') or line.startswith('MEDIUM'):
-            continue
-        # Clean up the line — remove raw markdown
-        line = _re.sub(r'^[\-•\d\.]+\s*', '', line)
-        if line:
-            ev_rows += f'<div style="padding:4px 0;color:#c0d8ec;font-size:0.85rem;border-bottom:1px solid #1a2332">{line}</div>\n'
+    # ── Answer section ──
+    answer_html = _render_citations_html(sections["answer"], chunks)
 
+    # ── Evidence source cards ──
+    ev_cards = ""
+    for i, chunk in enumerate(chunks[:5]):
+        sim = chunk.get("similarity", 0)
+        sc = "#00c875" if sim >= 0.55 else "#f59e0b" if sim >= 0.40 else "#e05252"
+        sim_pct = int(min(sim, 1.0) * 100)
+        doc = chunk.get("document_name", "Unknown")
+        sec = chunk.get("section_title", "")
+        page = chunk.get("page_number", "?")
+        chunk_id = chunk.get("chunk_id", "")[:8]
+        auth = "🏛️" if any(k in doc.lower() for k in ["nice","dsm","who","cdc","fda","peds"]) else "📚" if any(k in doc.lower() for k in ["eye-track","metaanalysis","fpsyt"]) else "📄"
+        ev_cards += f"""
+        <div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:#0a1520;border-radius:8px;border:1px solid #1a2332;margin-bottom:4px">
+          <div style="min-width:28px;text-align:center">
+            <div style="background:{sc}20;color:{sc};border-radius:6px;padding:2px 6px;font-size:0.72rem;font-weight:700">{auth} {i+1}</div>
+          </div>
+          <div style="flex:1;min-width:0">
+            <div style="color:#d4eaf8;font-size:0.82rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{doc[:45]}</div>
+            <div style="color:#5a7a9a;font-size:0.72rem">{sec[:35]} · p.{page}</div>
+          </div>
+          <div style="min-width:60px">
+            <div style="background:#1a2332;border-radius:3px;height:4px;overflow:hidden;margin-bottom:2px">
+              <div style="width:{sim_pct}%;height:100%;background:{sc};border-radius:3px"></div>
+            </div>
+            <div style="color:{sc};font-size:0.7rem;font-weight:600;text-align:right">{sim:.3f}</div>
+          </div>
+        </div>"""
+
+    # ── Build final HTML ──
     html = f"""
-    <div style="margin-bottom:12px">
-      <div style="color:#8ba6c0;font-size:0.82rem;font-weight:600;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.5px">📋 Answer</div>
-      <div style="color:#d4eaf8;line-height:1.8;font-size:0.92rem">{answer_text}</div>
-    </div>
-    """
+    <style>
+      .llm-section {{ margin-bottom:14px; }}
+      .llm-section-title {{
+        color:#5a7a9a; font-size:0.72rem; font-weight:700; text-transform:uppercase;
+        letter-spacing:1px; margin-bottom:6px; padding-bottom:4px;
+        border-bottom:1px solid #1a2332;
+      }}
+      .llm-answer-text {{ color:#d4eaf8; line-height:1.85; font-size:0.92rem; }}
+      .llm-answer-text p {{ margin:0 0 8px 0; }}
+      .conf-meter {{ background:#1a2332; border-radius:6px; height:6px; overflow:hidden; margin-top:4px; }}
+      .conf-meter-fill {{ height:100%; border-radius:6px; transition:width 0.8s ease; }}
+    </style>
 
-    if ev_rows:
-        html += f"""
-    <div style="margin-bottom:12px;padding:12px;background:#0a1520;border-radius:8px;border:1px solid #1a2332">
-      <div style="color:#8ba6c0;font-size:0.82rem;font-weight:600;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.5px">📚 Supporting Evidence</div>
-      {ev_rows}
+    <!-- Answer -->
+    <div class="llm-section">
+      <div class="llm-section-title">📋 Clinical Answer</div>
+      <div class="llm-answer-text">{answer_html}</div>
     </div>
-    """
 
-    html += f"""
-    <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
-      <span style="color:#8ba6c0;font-size:0.82rem;font-weight:600;text-transform:uppercase;letter-spacing:0.5px">🎯 Confidence</span>
-      <span style="background:{conf_color}20;color:{conf_color};padding:3px 12px;border-radius:12px;font-size:0.82rem;font-weight:700;border:1px solid {conf_color}40">{conf}</span>
+    <!-- Evidence Sources -->
+    <div class="llm-section">
+      <div class="llm-section-title">📚 Evidence Sources ({len(chunks)} retrieved)</div>
+      {ev_cards}
     </div>
-    """
 
-    if disclaimer:
-        html += f"""
-    <div style="padding:10px 14px;background:#0a1520;border-left:3px solid #f59e0b;border-radius:0 8px 8px 0;margin-top:8px">
-      <div style="color:#f59e0b;font-size:0.78rem;font-weight:600;margin-bottom:2px">⚕️ Clinical Disclaimer</div>
-      <div style="color:#8ba6c0;font-size:0.8rem;font-style:italic">{disclaimer}</div>
+    <!-- Confidence Meter -->
+    <div class="llm-section">
+      <div class="llm-section-title">🎯 Evidence Confidence</div>
+      <div style="display:flex;align-items:center;gap:12px">
+        <div style="flex:1">
+          <div class="conf-meter">
+            <div class="conf-meter-fill" style="width:{conf_pct}%;background:{conf_color}"></div>
+          </div>
+        </div>
+        <div style="min-width:80px;text-align:right">
+          <span style="color:{conf_color};font-size:0.9rem;font-weight:700">{conf}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Disclaimer -->
+    <div style="padding:10px 14px;background:#0a1520;border-left:3px solid #f59e0b;border-radius:0 8px 8px 0;margin-top:4px">
+      <div style="color:#f59e0b;font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:2px">⚕️ Clinical Disclaimer</div>
+      <div style="color:#5a7a9a;font-size:0.78rem;font-style:italic">This output is generated from clinical guidelines for decision support only. It does not replace professional medical judgment. Consult a qualified healthcare provider for clinical decisions.</div>
     </div>
     """
 
