@@ -1080,8 +1080,16 @@ def _sanitize_response(text: str) -> str:
     import re as _re
     if not text:
         return ""
-    text = _re.sub(r'ERROR:\s*Cannot read.*?Inform the user\.\s*', '', text, flags=_re.IGNORECASE)
-    text = _re.sub(r'This model does not support image input.*?\n', '', text, flags=_re.IGNORECASE)
+    # Strip "ERROR: Cannot read "image.png" (this model does not support image input). Inform the user."
+    text = _re.sub(r'ERROR:\s*Cannot read ".*?"\s*\(.*?model does not support image input.*?\)[^\n]*', '', text, flags=_re.IGNORECASE)
+    # Strip generic "Cannot read" lines
+    text = _re.sub(r'[^\n]*Cannot read[^\n]*image[^\n]*\n?', '', text, flags=_re.IGNORECASE)
+    # Strip "This model does not support image input" lines
+    text = _re.sub(r'[^\n]*This model does not support image input[^\n]*\n?', '', text, flags=_re.IGNORECASE)
+    # Strip any remaining "Inform the user." lines
+    text = _re.sub(r'Inform the user\.[^\n]*', '', text, flags=_re.IGNORECASE)
+    # Clean up multiple blank lines
+    text = _re.sub(r'\n{3,}', '\n\n', text)
     return text.strip()
 
 

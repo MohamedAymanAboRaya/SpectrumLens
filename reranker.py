@@ -64,7 +64,15 @@ class OpenRouterReranker:
         if not chunks:
             return []
 
-        documents = [c.get("content") or c.get("text") or c.get("original_text", "") for c in chunks]
+        # Filter out chunks with empty/whitespace-only content
+        valid_chunks = [(i, c) for i, c in enumerate(chunks) if (c.get("content") or c.get("text") or c.get("original_text", "")).strip()]
+        if not valid_chunks:
+            return []
+
+        valid_indices = [vi[0] for vi in valid_chunks]
+        valid_chunks = [vi[1] for vi in valid_chunks]
+
+        documents = [c.get("content") or c.get("text") or c.get("original_text", "") for c in valid_chunks]
 
         data = None
         for attempt in range(3):
@@ -108,13 +116,14 @@ class OpenRouterReranker:
                 content=c.get("content") or c.get("text") or "",
                 vector_score=c.get("similarity", 0.0),
                 rerank_score=c.get("similarity", 0.0),
-            ) for c in chunks[:top_n]]
+            ) for c in valid_chunks[:top_n]]
 
         ranked = []
         for result in data.get("results", []):
             idx = result.get("index", 0)
+            orig_idx = valid_indices[idx] if idx < len(valid_indices) else idx
             score = result.get("relevance_score", 0.0)
-            chunk = chunks[idx]
+            chunk = chunks[orig_idx]
             ranked.append(RankedChunk(
                 chunk_id=chunk.get("chunk_id", "unknown"),
                 document_name=chunk.get("document_name", "unknown"),
@@ -241,7 +250,15 @@ class CohereReranker:
         if not chunks:
             return []
 
-        documents = [c.get("content", "") for c in chunks]
+        # Filter out chunks with empty/whitespace-only content
+        valid_chunks = [(i, c) for i, c in enumerate(chunks) if (c.get("content", "") or c.get("text", "")).strip()]
+        if not valid_chunks:
+            return []
+
+        valid_indices = [vi[0] for vi in valid_chunks]
+        valid_chunks = [vi[1] for vi in valid_chunks]
+
+        documents = [c.get("content", "") or c.get("text", "") for c in valid_chunks]
         response = self._client.rerank(
             model=self.MODEL_NAME,
             query=query,
@@ -249,17 +266,18 @@ class CohereReranker:
             return_documents=False,
         )
 
-        # Map Cohere's index-based results back to our chunks
+        # Map Cohere's index-based results back to original chunks
         ranked = []
         for result in response.results:
-            chunk = chunks[result.index]
+            orig_idx = valid_indices[result.index]
+            chunk = chunks[orig_idx]
             ranked.append(
                 RankedChunk(
                     chunk_id=chunk.get("chunk_id", "unknown"),
                     document_name=chunk.get("document_name", "unknown"),
                     section_title=chunk.get("section_title", "unknown"),
                     page_number=chunk.get("page_number", "unknown"),
-                    content=chunk.get("content", ""),
+                    content=chunk.get("content", "") or chunk.get("text", ""),
                     vector_score=chunk.get("similarity", 0.0),
                     rerank_score=result.relevance_score,
                 )
