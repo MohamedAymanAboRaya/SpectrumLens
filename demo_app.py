@@ -834,12 +834,17 @@ def failure_mode(retrieved: List[Dict], gt_sources: List[str], p5: float) -> Opt
         d = c.get("document_name","")
         doc_counts[d] = doc_counts.get(d,0)+1
     if max(doc_counts.values()) >= 3:
-        return f"DUPLICATE (doc: {max(doc_counts, key=doc_counts.get)})"
+        raw = max(doc_counts, key=doc_counts.get)
+        clean = raw.replace("_", " ").replace(".pdf", "").replace(".docx", "")
+        clean = _re.sub(r'\s+', ' ', clean).strip()
+        return f"DUPLICATE ({clean[:50]})"
     gt = [s.lower() for s in gt_sources]
     found = any(any(g in c.get("document_name","").lower() or
                     c.get("document_name","").lower() in g for g in gt) for c in top5)
     if not found:
-        return f"MISSING_SOURCE (got: {top5[0].get('document_name','?')[:30]})"
+        raw = top5[0].get('document_name','?')
+        clean = raw.replace("_", " ").replace(".pdf", "")[:30]
+        return f"MISSING_SOURCE (got: {clean})"
     if p5 < 0.40:
         return f"WRONG_TOPIC (top section: {top5[0].get('section_title','?')[:40]})"
     return None
@@ -1469,7 +1474,8 @@ with st.sidebar:
             "openrouter": "OpenRouter · Gemini 2.5 Flash",
             "groq": "Groq · Allam-2-7B + GPT-OSS-120B",
         }
-        _provider_keys = list(_provider_labels.keys())
+        # Only show available providers in the radio
+        _provider_keys = [k for k in ["groq", "openrouter", "agentrouter"] if k in _avail]
         _provider_idx = 0
         if st.session_state.get("preferred_provider") in _provider_keys:
             _provider_idx = _provider_keys.index(st.session_state["preferred_provider"])
@@ -2288,11 +2294,15 @@ with tab_compare:
 
                 for i, chunk in enumerate(res[:5]):
                     sc = score_class(chunk.get("similarity", 0))
+                    sim_val = chunk.get("similarity", 0)
+                    sim_text = f"sim {sim_val:.3f}" if sim_val > 0 else "keyword"
+                    sim_color = "#00c875" if sim_val >= 0.55 else "#f59e0b" if sim_val >= 0.40 else "#e05252" if sim_val > 0 else "#5a7a9a"
+                    clean_doc = chunk['document_name'].replace("_", " ")[:40]
                     st.markdown(f"""
                     <div style="background:#0a1628;border:1px solid #1a2332;border-radius:6px;padding:8px;margin:4px 0;font-size:0.82rem;">
                       <span style="color:#7ecfff;font-weight:600">#{i+1}</span>
-                      <span class="pill {sc}" style="margin-left:4px">sim {chunk.get('similarity', 0):.3f}</span>
-                      <div style="color:#c0d8ec;margin-top:4px;">📄 {chunk['document_name'][:40]}</div>
+                      <span style="background:{sim_color}20;color:{sim_color};padding:1px 6px;border-radius:4px;font-size:0.72rem;font-weight:600;margin-left:4px">{sim_text}</span>
+                      <div style="color:#c0d8ec;margin-top:4px;">📄 {clean_doc}</div>
                       <div style="color:#8ba6c0;font-size:0.75rem;">📖 {chunk['section_title'][:50]}</div>
                     </div>
                     """, unsafe_allow_html=True)
