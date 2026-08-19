@@ -1341,7 +1341,10 @@ def _parse_answer_sections(raw: str) -> dict:
     raw = _re.sub(r'\n*⚠️\s*\d+\s*claim.*?evidence\.?$', '', raw, flags=_re.DOTALL)
 
     # Convert "Source N" (without brackets) to 【Source N】 for clickable links
-    raw = _re.sub(r'(?<!【)Source\s+(\d+)(?!】)', r'【Source \1】', raw)
+    raw = _re.sub(r'Source\s+(\d+)', r'【Source \1】', raw)
+    # Deduplicate any double-bracket: 【【Source N】】 → 【Source N】
+    raw = _re.sub(r'【【Source (\d+)】】', r'【Source \1】', raw)
+    raw = _re.sub(r'【【Source (\d+)】', r'【Source \1】', raw)
 
     # ── Extract answer text (everything before evidence/confidence/disclaimer) ──
     answer_end = len(raw)
@@ -1353,9 +1356,11 @@ def _parse_answer_sections(raw: str) -> dict:
             answer_end = m.start()
     answer = raw[:answer_end].strip()
 
-    # Strip the 📋 **Answer** header line if present
+    # Strip the 📋 **Answer** / 📋 **الإجابة** header line if present
     answer = _re.sub(r'^[\s]*📋\s*\*\*\s*Answer\s*\*\*\s*\n?', '', answer)
-    answer = _re.sub(r'^[\s]*📋\s*الإجابة\s*\n?', '', answer)
+    answer = _re.sub(r'^[\s]*📋\s*\*\*\s*الإجابة\s*\*\*\s*\n?', '', answer)
+    answer = _re.sub(r'^[\s]*📋\s*الإجابة\s*\*?\*?\s*\n?', '', answer)
+    answer = _re.sub(r'^[\s]*📋\s*Answer\s*\*?\*?\s*\n?', '', answer)
     answer = _re.sub(r'^[\s]*\*\*Answer\*\*\s*\n?', '', answer)
     answer = _re.sub(r'^[\s]*\*\*الإجابة\*\*\s*\n?', '', answer)
 
@@ -1729,12 +1734,13 @@ with tab_search:
         # ── Two-Stage Reranking (optional) ─────────────────────────────────
         reranker_ms = 0
         if use_reranker and results and len(results) > 1:
-            with st.spinner("🔄 Reranking with Jina Reranker v3.5…"):
+            with st.spinner("🔄 Reranking with Cohere Rerank v3.5…"):
                 t_r = time.perf_counter()
                 try:
-                    from reranker import JinaReranker
-                    rr = JinaReranker()
-                    results = rr.rerank(query, results, top_k=top_k)
+                    from reranker import ClinicalReranker
+                    rr = ClinicalReranker(top_n=top_k)
+                    ranked = rr.rerank(query, results)
+                    results = [c for c in ranked]
                 except Exception as e:
                     st.warning(f"Reranker failed: {e} — using original ranking")
                 reranker_ms = (time.perf_counter()-t_r)*1000

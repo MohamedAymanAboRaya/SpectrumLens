@@ -275,9 +275,9 @@ class ClinicalReranker:
     Top-level reranker used by the CRAG orchestrator.
 
     Selection logic:
-        JINA_API_KEY set   →  JinaReranker    (best, multilingual, Arabic)
-        COHERE_API_KEY set →  CohereReranker
-        otherwise          →  LocalCrossEncoderReranker  (free, offline)
+        COHERE_API_KEY set → CohereReranker    (best quality, 100+ langs, Arabic+English)
+        OPENROUTER_API_KEY set → OpenRouterReranker (free, multilingual)
+        otherwise → LocalCrossEncoderReranker  (free, offline, English-optimized)
 
     Args:
         rerank_threshold: Minimum rerank score to keep a chunk.
