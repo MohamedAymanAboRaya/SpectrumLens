@@ -136,7 +136,7 @@ section[data-testid="stSidebar"] { background:#0d1928; }
 # ─── Constants ───────────────────────────────────────────────────────────────
 CHUNKS_PATH   = "data/processed_chunks/day1_chunks_output.json"
 EVAL_PATH     = "data/eval/eval_dataset.json"
-EMBED_MODEL   = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"  # 490MB, 50+ langs incl. Arabic
+EMBED_MODEL   = "openai/text-embedding-3-small"  # 1536-dim, OpenRouter API, fast
 SAFETY_THRESH = 0.30
 GROQ_KEY      = os.environ.get("GROQ_API_KEY", "")
 JINA_KEY      = os.environ.get("JINA_API_KEY", "")
@@ -440,7 +440,26 @@ def cosine_search(query: str, embedder, index: np.ndarray,
                   threshold: float = SAFETY_THRESH,
                   language_filter: Optional[str] = None) -> List[Dict[str, Any]]:
     norm_query = _preprocessor.normalize_query(query)
-    q_emb = embedder.encode([norm_query], normalize_embeddings=True)
+    # Use OpenRouter API directly for query embedding (matches 1536-dim precomputed)
+    import requests as _req
+    OPENROUTER_KEY = os.environ.get("OPENROUTER_API_KEY", "")
+    if OPENROUTER_KEY and index.shape[1] == 1536:
+        try:
+            resp = _req.post("https://openrouter.ai/api/v1/embeddings",
+                headers={"Authorization": f"Bearer {OPENROUTER_KEY}", "Content-Type": "application/json"},
+                json={"input": norm_query, "model": "openai/text-embedding-3-small"},
+                timeout=15)
+            if resp.status_code == 200:
+                q_emb = np.array(resp.json()["data"][0]["embedding"], dtype="float32")
+                norms = np.linalg.norm(q_emb)
+                if norms > 0:
+                    q_emb = q_emb / norms
+            else:
+                raise Exception(f"API {resp.status_code}")
+        except Exception:
+            q_emb = np.array(embedder.encode([norm_query], normalize_embeddings=True)[0], dtype="float32")
+    else:
+        q_emb = np.array(embedder.encode([norm_query], normalize_embeddings=True)[0], dtype="float32")
     if q_emb is None or q_emb.size == 0:
         return []
     q_emb = q_emb[0]
