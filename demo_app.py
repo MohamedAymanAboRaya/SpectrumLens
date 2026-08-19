@@ -1314,8 +1314,10 @@ def _parse_answer_sections(raw: str) -> dict:
     raw = _re.sub(r'\n*---\n*\*\*Confidence:\*\*.*$', '', raw, flags=_re.DOTALL)
     raw = _re.sub(r'\n*⚠️\s*\d+\s*claim.*?evidence\.?$', '', raw, flags=_re.DOTALL)
 
+    # Convert "Source N" (without brackets) to 【Source N】 for clickable links
+    raw = _re.sub(r'(?<!【)Source\s+(\d+)(?!】)', r'【Source \1】', raw)
+
     # ── Extract answer text (everything before evidence/confidence/disclaimer) ──
-    # Try multiple分割 patterns
     answer_end = len(raw)
     for pattern in [r'📚\s*\*\*Supporting', r'📚\s*\*\*الأدلة', r'\*\*Supporting Evidence\*\*',
                     r'🎯\s*\*\*Confidence', r'🎯\s*\*\*الثقة', r'\*\*Confidence\*\*',
@@ -1323,7 +1325,15 @@ def _parse_answer_sections(raw: str) -> dict:
         m = _re.search(pattern, raw)
         if m and m.start() < answer_end:
             answer_end = m.start()
-    sections["answer"] = raw[:answer_end].strip()
+    answer = raw[:answer_end].strip()
+
+    # Strip the 📋 **Answer** header line if present
+    answer = _re.sub(r'^[\s]*📋\s*\*\*\s*Answer\s*\*\*\s*\n?', '', answer)
+    answer = _re.sub(r'^[\s]*📋\s*الإجابة\s*\n?', '', answer)
+    answer = _re.sub(r'^[\s]*\*\*Answer\*\*\s*\n?', '', answer)
+    answer = _re.sub(r'^[\s]*\*\*الإجابة\*\*\s*\n?', '', answer)
+
+    sections["answer"] = answer
 
     # ── Extract evidence items ──
     ev_patterns = [
@@ -1375,7 +1385,8 @@ def _render_structured_answer(raw: str, chunks: List[Dict]) -> str:
         sim = chunk.get("similarity", 0)
         sc = "#00c875" if sim >= 0.55 else "#f59e0b" if sim >= 0.40 else "#e05252"
         sim_pct = int(min(sim, 1.0) * 100)
-        doc = chunk.get("document_name", "Unknown")
+        doc = chunk.get("document_name", "Unknown").replace("_", " ").replace(".pdf", "").replace(".docx", "")
+        doc = _re.sub(r'\s+', ' ', doc).strip()
         sec = chunk.get("section_title", "")
         page = chunk.get("page_number", "?")
         chunk_id = chunk.get("chunk_id", "")[:8]
@@ -1457,8 +1468,9 @@ with st.sidebar:
     thresh   = st.slider("Min similarity", 0.10, 0.60, SAFETY_THRESH, 0.05)
     lang_filter = st.selectbox("Language Filter", ["All", "English", "Arabic"], index=0)
     lang_code = {"All": None, "English": "en", "Arabic": "ar"}[lang_filter]
-    use_reranker = st.checkbox("Two-Stage Reranking (Jina Reranker)", value=False,
-                                help="Re-rank top results with Jina Reranker v3.5 for higher precision")
+    use_reranker = False  # Jina API credits exhausted — disabled
+    st.checkbox("Two-Stage Reranking (Jina Reranker)", value=False, disabled=True,
+                help="⚠️ Jina API credits exhausted. Reranking unavailable.")
 
     st.markdown("---")
     st.markdown("## 🤖 LLM Provider / مزود الذكاء الاصطناعي")
