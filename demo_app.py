@@ -21,6 +21,8 @@ import pandas as pd
 import streamlit as st
 from dotenv import load_dotenv
 from arabic_preprocessor import ArabicPreprocessor, detect_language, add_bge_query_prefix
+import importlib, llm_providers as _llm_providers_mod
+importlib.reload(_llm_providers_mod)
 from llm_providers import LLMProvider, get_provider
 
 load_dotenv()
@@ -36,123 +38,287 @@ st.set_page_config(
 # ─── CSS ─────────────────────────────────────────────────────────────────────────
 st.markdown("""
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Noto+Naskh+Arabic:wght@400;500;600;700&display=swap');
-html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap');
+
+/* BASE */
+html, body, [class*="css"] { font-family: 'Inter', 'Segoe UI', sans-serif; color: #d4e8f8; }
+.stApp {
+  background: #060d17;
+  background-image:
+    radial-gradient(ellipse 80% 60% at 50% -20%, rgba(0,200,117,0.07) 0%, transparent 70%),
+    linear-gradient(180deg, #060d17 0%, #070e1a 100%);
+}
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: #0a1520; }
+::-webkit-scrollbar-thumb { background: #1e3448; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #00c87540; }
+
+/* SIDEBAR */
+section[data-testid="stSidebar"] {
+  background: linear-gradient(180deg, #080f1c 0%, #090e1a 100%) !important;
+  border-right: 1px solid rgba(255,255,255,0.05) !important;
+}
+section[data-testid="stSidebar"] .stMarkdown h2,
+section[data-testid="stSidebar"] .stMarkdown h3 {
+  color: #7ecfff; font-size: 0.75rem; font-weight: 800;
+  text-transform: uppercase; letter-spacing: 1.4px;
+  border-bottom: 1px solid rgba(126,207,255,0.1);
+  padding-bottom: 0.4rem; margin-top: 1.2rem;
+}
+
+/* BUTTONS */
+.stButton > button {
+  background: linear-gradient(135deg, #00c875 0%, #00a862 100%) !important;
+  color: #000 !important; border: none !important;
+  font-weight: 700 !important; font-family: 'Inter', sans-serif !important;
+  border-radius: 10px !important; transition: all 0.2s ease !important;
+  box-shadow: 0 4px 12px rgba(0,200,117,0.25) !important; letter-spacing: 0.3px !important;
+}
+.stButton > button:hover {
+  transform: translateY(-1px) !important;
+  box-shadow: 0 6px 20px rgba(0,200,117,0.4) !important;
+  filter: brightness(1.08) !important;
+}
+.stButton > button:active { transform: translateY(0) !important; }
+
+/* INPUTS */
+.stTextInput input {
+  background: rgba(255,255,255,0.04) !important;
+  border: 1px solid rgba(255,255,255,0.1) !important;
+  border-radius: 12px !important; color: #e2f4ff !important;
+  font-family: 'Inter', sans-serif !important; font-size: 0.95rem !important;
+  padding: 0.65rem 1rem !important; transition: all 0.25s ease !important;
+}
+.stTextInput input:focus {
+  border-color: rgba(0,200,117,0.6) !important;
+  box-shadow: 0 0 0 3px rgba(0,200,117,0.12), 0 0 20px rgba(0,200,117,0.08) !important;
+  background: rgba(0,200,117,0.03) !important;
+}
+.stTextInput input::placeholder { color: #3a5a7a !important; }
+
+/* TABS */
+.stTabs [data-baseweb="tab-list"] {
+  background: rgba(255,255,255,0.03) !important; border-radius: 12px !important;
+  padding: 4px !important; border: 1px solid rgba(255,255,255,0.06) !important; gap: 2px !important;
+}
+.stTabs [data-baseweb="tab"] {
+  background: transparent !important; border-radius: 8px !important;
+  color: #5a7a9a !important; font-weight: 600 !important;
+  font-size: 0.82rem !important; padding: 0.4rem 1rem !important;
+  transition: all 0.2s !important; border: none !important;
+}
+.stTabs [data-baseweb="tab"]:hover { background: rgba(255,255,255,0.05) !important; color: #d4e8f8 !important; }
+.stTabs [aria-selected="true"] {
+  background: linear-gradient(135deg, rgba(0,200,117,0.2), rgba(0,200,117,0.08)) !important;
+  color: #00c875 !important; box-shadow: 0 2px 8px rgba(0,200,117,0.15) !important;
+}
+.stTabs [data-baseweb="tab-highlight"] { display: none !important; }
+.stTabs [data-baseweb="tab-border"]    { display: none !important; }
+
+/* SELECTS / SLIDERS */
+.stSelectbox > div > div {
+  background: rgba(255,255,255,0.04) !important;
+  border: 1px solid rgba(255,255,255,0.1) !important;
+  border-radius: 10px !important; color: #d4e8f8 !important;
+}
+.stSlider [role="slider"] { background: #00c875 !important; }
+.stSlider [data-testid="stSliderTrack"] > div:nth-child(2) { background: #00c875 !important; }
+.stRadio label { color: #8ba6c0 !important; font-size: 0.83rem !important; }
+.stCheckbox label { color: #8ba6c0 !important; font-size: 0.83rem !important; }
+
+/* NATIVE METRICS */
+[data-testid="metric-container"] {
+  background: linear-gradient(145deg, #0d1b2a, #0f2035) !important;
+  border: 1px solid rgba(126,207,255,0.12) !important;
+  border-radius: 12px !important; padding: 1rem 1.2rem !important;
+}
+[data-testid="metric-container"] label {
+  color: #5a7a9a !important; font-size: 0.68rem !important;
+  font-weight: 700 !important; text-transform: uppercase !important; letter-spacing: 1px !important;
+}
+[data-testid="metric-container"] [data-testid="stMetricValue"] {
+  color: #e2f4ff !important; font-size: 1.55rem !important; font-weight: 800 !important;
+}
+[data-testid="metric-container"] [data-testid="stMetricDelta"] { font-size: 0.72rem !important; }
+
+/* EXPANDERS */
+.streamlit-expanderHeader {
+  background: rgba(255,255,255,0.03) !important;
+  border: 1px solid rgba(255,255,255,0.07) !important;
+  border-radius: 10px !important; color: #6b8aaa !important; font-weight: 600 !important;
+}
+
+/* HR */
+hr { border: none !important; border-top: 1px solid rgba(255,255,255,0.06) !important; margin: 1.5rem 0 !important; }
+
+/* ══ COMPONENT CLASSES ══ */
 .rtl { direction: rtl; text-align: right; font-family: 'Noto Naskh Arabic', 'Inter', sans-serif; }
-.lang-badge-ar { display:inline-block; background:rgba(52,211,153,0.15); border:1px solid rgba(52,211,153,0.4); color:#34d399; font-size:0.7rem; font-weight:700; padding:0.1rem 0.4rem; border-radius:8px; margin-left:0.4rem; }
-.lang-badge-en { display:inline-block; background:rgba(126,207,255,0.12); border:1px solid rgba(126,207,255,0.3); color:#7ecfff; font-size:0.7rem; font-weight:700; padding:0.1rem 0.4rem; border-radius:8px; margin-left:0.4rem; }
+.lang-badge-ar {
+  display: inline-flex; align-items: center; gap: 4px;
+  background: rgba(52,211,153,0.1); border: 1px solid rgba(52,211,153,0.3);
+  color: #34d399; font-size: 0.68rem; font-weight: 700;
+  padding: 0.1rem 0.5rem; border-radius: 20px; margin-left: 0.4rem;
+}
+.lang-badge-en {
+  display: inline-flex; align-items: center; gap: 4px;
+  background: rgba(126,207,255,0.08); border: 1px solid rgba(126,207,255,0.25);
+  color: #7ecfff; font-size: 0.68rem; font-weight: 700;
+  padding: 0.1rem 0.5rem; border-radius: 20px; margin-left: 0.4rem;
+}
 
+/* HERO */
 .hero {
-    background: linear-gradient(135deg,#0f2027 0%,#203a43 50%,#2c5364 100%);
-    border-radius:16px; padding:2rem 2.5rem; margin-bottom:1.5rem;
-    border:1px solid rgba(255,255,255,0.08);
+  background:
+    radial-gradient(ellipse 120% 100% at 60% -10%, rgba(0,200,117,0.1) 0%, transparent 60%),
+    linear-gradient(145deg, #0a1a2a 0%, #0d2040 50%, #0a1828 100%);
+  border-radius: 20px; padding: 2.2rem 2.5rem; margin-bottom: 1.5rem;
+  border: 1px solid rgba(0,200,117,0.15);
+  box-shadow: 0 8px 40px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.05);
+  position: relative; overflow: hidden;
 }
-.hero-title { font-size:2rem; font-weight:700; color:#e2f4ff; margin:0; }
-.hero-sub   { color:#7ecfff; font-size:0.95rem; margin-top:0.4rem; }
+.hero::before {
+  content: ''; position: absolute; top: -1px; left: 0; right: 0; height: 2px;
+  background: linear-gradient(90deg, transparent, #00c875, transparent);
+}
+.hero-title { font-size: 2rem; font-weight: 800; color: #e8f6ff; margin: 0; letter-spacing: -0.5px; }
+.hero-sub { color: #5a7a9a; font-size: 0.88rem; margin-top: 0.5rem; line-height: 1.5; }
+.hero-tag {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 4px 12px; border-radius: 20px;
+  font-size: 0.7rem; font-weight: 700;
+  border: 1px solid; margin-right: 6px; margin-top: 4px;
+}
 
+/* EVIDENCE CARDS */
 .ev-card {
-    background:#1a2332; border:1px solid rgba(126,207,255,0.18);
-    border-left:4px solid #7ecfff; border-radius:12px;
-    padding:1.2rem 1.5rem; margin-bottom:0.9rem;
+  background: linear-gradient(145deg, #0d1b2a, #0f2035);
+  border: 1px solid rgba(126,207,255,0.1);
+  border-left: 3px solid #3b82f6;
+  border-radius: 14px; padding: 1.1rem 1.4rem; margin-bottom: 10px;
+  transition: all 0.25s ease;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.3);
 }
-.ev-card.top { border-left-color:#00c875; background:#13231a; }
-.ev-rank  { font-size:0.72rem; font-weight:700; color:#7ecfff; text-transform:uppercase; letter-spacing:1px; }
-.ev-title { font-size:0.95rem; font-weight:600; color:#e2f4ff; margin-top:0.35rem; }
-.ev-meta  { font-size:0.78rem; color:#8ba6c0; margin-top:0.2rem; }
+.ev-card:hover {
+  border-color: rgba(126,207,255,0.22);
+  box-shadow: 0 4px 24px rgba(0,0,0,0.4); transform: translateY(-1px);
+}
+.ev-card.top {
+  border-left-color: #00c875;
+  background: linear-gradient(145deg, #0d2018, #0f2a1e);
+  border-color: rgba(0,200,117,0.18);
+}
+.ev-card.top:hover { border-color: rgba(0,200,117,0.35); }
+.ev-card { scroll-margin-top: 80px; }
+.ev-rank  { font-size: 0.67rem; font-weight: 800; color: #3a5a7a; text-transform: uppercase; letter-spacing: 1.5px; }
+.ev-title { font-size: 0.9rem; font-weight: 700; color: #e2f4ff; margin-top: 0.3rem; }
+.ev-meta  { font-size: 0.75rem; color: #5a7a9a; margin-top: 0.2rem; }
 .ev-excerpt {
-    font-size:0.84rem; color:#c0d8ec; margin-top:0.8rem; line-height:1.6;
-    border-top:1px solid rgba(255,255,255,0.06); padding-top:0.7rem;
+  font-size: 0.81rem; color: #7a9ab8; margin-top: 0.75rem; line-height: 1.7;
+  border-top: 1px solid rgba(255,255,255,0.05); padding-top: 0.65rem;
 }
+
+/* PILLS */
 .pill {
-    display:inline-block; padding:0.15rem 0.55rem; border-radius:12px;
-    font-size:0.75rem; font-weight:600; margin-left:0.4rem;
-    background:rgba(126,207,255,0.12); border:1px solid rgba(126,207,255,0.3); color:#7ecfff;
+  display: inline-flex; align-items: center; padding: 0.18rem 0.6rem;
+  border-radius: 20px; font-size: 0.7rem; font-weight: 700; margin-left: 0.4rem;
+  background: rgba(126,207,255,0.08); border: 1px solid rgba(126,207,255,0.25); color: #7ecfff;
 }
-.pill.high   { background:rgba(0,200,117,0.12); border-color:rgba(0,200,117,0.4); color:#00c875; }
-.pill.medium { background:rgba(255,193,7,0.12); border-color:rgba(255,193,7,0.4); color:#ffc107; }
-.pill.low    { background:rgba(224,82,82,0.12); border-color:rgba(224,82,82,0.4); color:#e05252; }
+.pill.high   { background: rgba(0,200,117,0.1);  border-color: rgba(0,200,117,0.35);  color: #00c875; }
+.pill.medium { background: rgba(245,158,11,0.1); border-color: rgba(245,158,11,0.35); color: #f59e0b; }
+.pill.low    { background: rgba(239,68,68,0.1);  border-color: rgba(239,68,68,0.35);  color: #ef4444; }
 
-.answer-box {
-    background:#0f1e2d; border:1px solid rgba(0,200,117,0.25);
-    border-radius:12px; padding:1.5rem; line-height:1.7; color:#d4eaf8;
-}
-.answer-box .citation-link {
-    display:inline-block; background:rgba(0,200,117,0.15); color:#00c875;
-    padding:1px 6px; border-radius:4px; font-size:0.82rem; font-weight:600;
-    text-decoration:none; cursor:pointer; transition:all 0.2s;
-    border:1px solid rgba(0,200,117,0.3); margin:0 2px;
-}
-.answer-box .citation-link:hover {
-    background:rgba(0,200,117,0.3); border-color:#00c875;
-    box-shadow:0 0 8px rgba(0,200,117,0.3);
-}
-.answer-box .citation-link::before { content:"📎 "; font-size:0.7rem; }
-.citation-tooltip {
-    position:relative; display:inline-block;
-}
-.citation-tooltip .tip-content {
-    display:none; position:absolute; bottom:125%; left:50%; transform:translateX(-50%);
-    background:#1a2332; border:1px solid #2a3a4a; border-radius:8px;
-    padding:8px 12px; font-size:0.75rem; color:#c0d8ec; width:280px;
-    box-shadow:0 4px 12px rgba(0,0,0,0.4); z-index:100;
-}
-.citation-tooltip:hover .tip-content { display:block; }
-.ev-card { scroll-margin-top:80px; }
+/* STOP BOX */
 .stop-box {
-    background:#1f0e0e; border:1px solid rgba(224,82,82,0.4);
-    border-radius:12px; padding:1.5rem; color:#f9c0c0;
+  background: linear-gradient(145deg, #1a0a0a, #1f0d0d);
+  border: 1px solid rgba(239,68,68,0.25); border-left: 4px solid #ef4444;
+  border-radius: 14px; padding: 1.5rem; color: #fca5a5;
+  box-shadow: 0 4px 20px rgba(239,68,68,0.1);
 }
-.prec-table { width:100%; border-collapse:collapse; font-size:0.85rem; }
-.prec-table th { background:#1a2332; color:#7ecfff; padding:0.5rem 0.8rem; text-align:left; }
-.prec-table td { padding:0.45rem 0.8rem; border-bottom:1px solid rgba(255,255,255,0.05); color:#c0d8ec; }
-.prec-table tr:hover td { background:rgba(126,207,255,0.04); }
-.ok   { color:#00c875; font-weight:600; }
-.warn { color:#ffc107; font-weight:600; }
-.bad  { color:#e05252; font-weight:600; }
-section[data-testid="stSidebar"] { background:#0d1928; }
 
+/* PRECISION TABLE */
+.prec-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+.prec-table th {
+  background: rgba(126,207,255,0.06); color: #7ecfff;
+  padding: 0.6rem 0.9rem; text-align: left;
+  font-size: 0.68rem; font-weight: 800; letter-spacing: 0.5px; text-transform: uppercase;
+}
+.prec-table td { padding: 0.5rem 0.9rem; border-bottom: 1px solid rgba(255,255,255,0.04); color: #c0d8ec; }
+.prec-table tr:hover td { background: rgba(126,207,255,0.03); }
+.ok   { color: #00c875 !important; font-weight: 700; }
+.warn { color: #f59e0b !important; font-weight: 700; }
+.bad  { color: #ef4444 !important; font-weight: 700; }
+
+/* CUSTOM METRIC CARDS */
 .metric-card {
-    background:#1a2332; border:1px solid rgba(126,207,255,0.18);
-    border-radius:12px; padding:1rem 1.2rem; text-align:center;
+  background: linear-gradient(145deg, #0d1b2a, #0f2035);
+  border: 1px solid rgba(126,207,255,0.12); border-radius: 14px;
+  padding: 1.1rem 1.3rem; text-align: center;
+  transition: all 0.2s; box-shadow: 0 2px 12px rgba(0,0,0,0.3);
 }
-.metric-card .metric-value { font-size:1.5rem; font-weight:700; color:#e2f4ff; }
-.metric-card .metric-label { font-size:0.75rem; color:#8ba6c0; margin-top:0.2rem; }
-.metric-card .metric-target { font-size:0.7rem; color:#7ecfff; margin-top:0.15rem; }
-.metric-card.green  { border-color:rgba(0,200,117,0.4); }
-.metric-card.green .metric-value { color:#00c875; }
-.metric-card.yellow { border-color:rgba(255,193,7,0.4); }
-.metric-card.yellow .metric-value { color:#ffc107; }
-.metric-card.red    { border-color:rgba(224,82,82,0.4); }
-.metric-card.red .metric-value { color:#e05252; }
-.metric-card.blue   { border-color:rgba(126,207,255,0.4); }
+.metric-card:hover { transform: translateY(-2px); box-shadow: 0 6px 24px rgba(0,0,0,0.4); }
+.metric-card .metric-value { font-size: 1.6rem; font-weight: 800; color: #e2f4ff; line-height: 1.2; }
+.metric-card .metric-label { font-size: 0.67rem; color: #5a7a9a; margin-top: 0.3rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
+.metric-card .metric-target { font-size: 0.67rem; color: #3a5a7a; margin-top: 0.2rem; }
+.metric-card.green  { border-color: rgba(0,200,117,0.22); background: linear-gradient(145deg, #0a1d14, #0d2419); }
+.metric-card.green .metric-value { color: #00c875; }
+.metric-card.yellow { border-color: rgba(245,158,11,0.22); }
+.metric-card.yellow .metric-value { color: #f59e0b; }
+.metric-card.red    { border-color: rgba(239,68,68,0.22); }
+.metric-card.red .metric-value { color: #ef4444; }
+.metric-card.blue   { border-color: rgba(59,130,246,0.22); }
+.metric-card.blue .metric-value { color: #60a5fa; }
 
+/* ARCH FLOW */
 .arch-flow-box {
-    background:#1a2332; border:1px solid rgba(126,207,255,0.18);
-    border-radius:10px; padding:0.7rem 1rem; text-align:center;
-    font-size:0.82rem; color:#e2f4ff; font-weight:500;
-    min-height:60px; display:flex; align-items:center; justify-content:center;
+  background: linear-gradient(145deg, #0d1b2a, #0f2035);
+  border: 1px solid rgba(126,207,255,0.13); border-radius: 12px;
+  padding: 0.8rem 1rem; text-align: center; font-size: 0.81rem;
+  color: #d4e8f8; font-weight: 600; min-height: 64px;
+  display: flex; align-items: center; justify-content: center;
+  flex-direction: column; gap: 4px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.3); transition: all 0.2s;
 }
-.arch-arrow {
-    display:flex; align-items:center; justify-content:center;
-    font-size:1.3rem; color:#7ecfff; font-weight:700;
-}
+.arch-flow-box:hover { border-color: rgba(0,200,117,0.28); transform: translateY(-1px); }
+.arch-arrow { display: flex; align-items: center; justify-content: center; font-size: 1.1rem; color: #3a5a7a; }
 
+/* MODEL CARDS */
 .model-card {
-    background:#0f1e2d; border:1px solid rgba(126,207,255,0.2);
-    border-radius:12px; padding:1rem 1.2rem; margin-bottom:0.7rem;
+  background: linear-gradient(145deg, #0d1b2a, #0f2035);
+  border: 1px solid rgba(126,207,255,0.13); border-radius: 14px;
+  padding: 1.1rem 1.3rem; margin-bottom: 8px; transition: all 0.2s;
 }
-.model-card .mc-title { font-size:0.85rem; font-weight:700; color:#7ecfff; }
-.model-card .mc-detail { font-size:0.78rem; color:#c0d8ec; margin-top:0.3rem; }
+.model-card:hover { border-color: rgba(0,200,117,0.22); }
+.model-card .mc-title { font-size: 0.85rem; font-weight: 800; color: #7ecfff; margin-bottom: 0.3rem; }
+.model-card .mc-detail { font-size: 0.77rem; color: #5a7a9a; line-height: 1.6; }
 
+/* STAT CARDS */
 .stat-card {
-    background:#13231a; border:1px solid rgba(0,200,117,0.25);
-    border-radius:12px; padding:1rem; text-align:center;
+  background: linear-gradient(145deg, #0a1d14, #0d2419);
+  border: 1px solid rgba(0,200,117,0.18); border-radius: 14px;
+  padding: 1.2rem; text-align: center; box-shadow: 0 2px 12px rgba(0,200,117,0.07);
 }
-.stat-card .stat-val { font-size:1.6rem; font-weight:700; color:#00c875; }
-.stat-card .stat-lbl { font-size:0.75rem; color:#8ba6c0; margin-top:0.2rem; }
+.stat-card .stat-val { font-size: 1.9rem; font-weight: 800; color: #00c875; line-height: 1.1; }
+.stat-card .stat-lbl { font-size: 0.68rem; color: #5a7a9a; margin-top: 0.3rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
+
+/* LLM ANSWER fallback classes */
+.llm-section { margin-bottom: 14px; }
+.llm-section-title { color: #3a5a7a; font-size: 0.67rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1.4px; margin-bottom: 6px; }
+.llm-answer-text { color: #d4eaf8; line-height: 1.9; font-size: 0.95rem; }
+.conf-meter { background: rgba(255,255,255,0.07); border-radius: 6px; height: 8px; overflow: hidden; }
+.conf-meter-fill { height: 100%; border-radius: 6px; }
+
+/* ANSWER BOX */
+.answer-box {
+  background: linear-gradient(145deg, #0d1b2a, #0f2035);
+  border: 1px solid rgba(0,200,117,0.18); border-radius: 14px;
+  padding: 1.5rem; line-height: 1.8; color: #d4eaf8;
+}
 </style>
 """, unsafe_allow_html=True)
+
+
 
 
 # ─── Constants ───────────────────────────────────────────────────────────────
@@ -989,8 +1155,12 @@ GENERATOR_PROMPT_AR = """أنت SpectrumLens، مساعد دعم القرار ا
 import re as _re
 
 def _strip_think(raw: str) -> str:
-    """Strip <think>...</think> blocks from LLM output."""
-    return _re.sub(r'<think>.*?</think>', '', raw, flags=_re.DOTALL).strip()
+    """Remove <think>...</think> blocks — streaming-safe (no .strip() to preserve token boundary spaces)."""
+    return _re.sub(r'<think>.*?</think>', '', raw, flags=_re.DOTALL)
+
+def _strip_think_full(raw: str) -> str:
+    """Remove <think>...</think> blocks AND strip outer whitespace (use only for complete, non-streaming responses)."""
+    return _strip_think(raw).strip()
 
 
 def _groq_llm_call(messages, model="allam-2-7b", temperature=0, max_tokens=1200, response_format=None):
@@ -1000,7 +1170,7 @@ def _groq_llm_call(messages, model="allam-2-7b", temperature=0, max_tokens=1200,
     if response_format and "allam" not in model:
         kwargs["response_format"] = response_format
     resp = client.chat.completions.create(**kwargs)
-    return _strip_think(resp.choices[0].message.content)
+    return _strip_think_full(resp.choices[0].message.content)
 
 
 def _groq_llm_stream(messages, model=None, temperature=0.1, max_tokens=1200):
@@ -1077,11 +1247,11 @@ def _sanitize_chunk_text(t: str) -> str:
 
 
 def _sanitize_response(text: str) -> str:
-    """Strip LLM API error messages from response text and fix Arabic spacing."""
+    """Strip LLM API error messages from response text."""
     import re as _re
     if not text:
         return ""
-    # Strip "ERROR: Cannot read "image.png" (this model does not support image input). Inform the user."
+    # Strip "ERROR: Cannot read \"image.png\" (this model does not support image input). Inform the user."
     text = _re.sub(r'ERROR:\s*Cannot read ".*?"\s*\(.*?model does not support image input.*?\)[^\n]*', '', text, flags=_re.IGNORECASE)
     # Strip generic "Cannot read" lines
     text = _re.sub(r'[^\n]*Cannot read[^\n]*image[^\n]*\n?', '', text, flags=_re.IGNORECASE)
@@ -1091,32 +1261,6 @@ def _sanitize_response(text: str) -> str:
     text = _re.sub(r'Inform the user\.[^\n]*', '', text, flags=_re.IGNORECASE)
     # Clean up multiple blank lines
     text = _re.sub(r'\n{3,}', '\n\n', text)
-    
-    # Fix Arabic spacing: add spaces between Arabic words when missing
-    def _fix_arabic_spacing(t: str) -> str:
-        """Add spaces between Arabic words when they're concatenated without spaces."""
-        arabic_pattern = r'[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]'
-        
-        def add_spaces(match):
-            arabic_text = match.group(0)
-            result = []
-            for i, char in enumerate(arabic_text):
-                result.append(char)
-                if i < len(arabic_text) - 1:
-                    next_char = arabic_text[i + 1]
-                    # Add space after common word-ending characters in Arabic
-                    # More aggressive spacing: add after most Arabic letters when followed by another letter
-                    if char in 'ةهياأؤإآبتثجحخدذرزسشصضطظعغفقكلمن' and next_char not in ' \n\t،؛؟.،':
-                        result.append(' ')
-            return ''.join(result)
-        
-        t = _re.sub(f'({arabic_pattern}{{3,}})', add_spaces, t)
-        
-        # Clean up multiple spaces that might have been added
-        t = _re.sub(r' +', ' ', t)
-        return t
-    
-    text = _fix_arabic_spacing(text)
     return text.strip()
 
 
@@ -1254,7 +1398,8 @@ def groq_generate_stream(query: str, chunks: List[Dict]):
     # Append confidence badge and safety info
     conf_colors = {"HIGH": "#00c875", "MEDIUM": "#f59e0b", "LOW": "#ef4444", "INSUFFICIENT": "#6b7280"}
     conf_color = conf_colors.get(confidence, "#6b7280")
-    full_answer += f"\n\n---\n**Confidence:** :material[verified] [{confidence}]({conf_color})"
+    # Append confidence & unsupported info as clean plaintext (no Streamlit-specific syntax)
+    full_answer += f"\n\n---\n**Confidence: {confidence}**"
     if unsupported:
         full_answer += f"\n⚠️ *{len(unsupported)} claim(s) could not be traced to retrieved evidence.*"
 
@@ -1320,32 +1465,6 @@ def _render_citations_html(answer: str, chunks: List[Dict]) -> str:
     """Convert 【Source N】 and [SOURCE: ...] citations to clickable HTML links."""
     import re as _re
 
-    # Fix Arabic spacing: add spaces between Arabic words when missing
-    def _fix_arabic_spacing(text: str) -> str:
-        """Add spaces between Arabic words when they're concatenated without spaces."""
-        # Arabic letters range (basic Arabic + extended)
-        arabic_pattern = r'[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]'
-        
-        def add_spaces_to_arabic(match):
-            arabic_text = match.group(0)
-            # Simple heuristic: add space after common word-ending patterns
-            # This is a basic approach - for production, use a proper Arabic tokenizer
-            result = []
-            for i, char in enumerate(arabic_text):
-                result.append(char)
-                # Add space after certain characters that often end words in Arabic
-                if i < len(arabic_text) - 1:
-                    next_char = arabic_text[i + 1]
-                    # Word endings in Arabic: ة ه ي ا و
-                    if char in 'ةهياأؤإآ' and next_char not in ' \n\t،؛؟.،':
-                        result.append(' ')
-            return ''.join(result)
-        
-        # Apply to Arabic sequences longer than 4 chars
-        text = _re.sub(f'({arabic_pattern}{{5,}})', add_spaces_to_arabic, text)
-        return text
-
-    answer = _fix_arabic_spacing(answer)
 
     # Build source info map: index -> (doc, section, page, chunk_id, sim, excerpt)
     source_map = {}
@@ -1464,6 +1583,7 @@ def _parse_answer_sections(raw: str) -> dict:
 def _render_structured_answer(raw: str, chunks: List[Dict]) -> str:
     """Render LLM answer as world-class structured HTML with clean sections."""
     import re as _re
+    import html as _html_mod
     sections = _parse_answer_sections(raw)
     conf = sections["confidence"]
 
@@ -1472,84 +1592,252 @@ def _render_structured_answer(raw: str, chunks: List[Dict]) -> str:
     conf_pct = {"HIGH": 95, "MEDIUM": 65, "LOW": 30, "INSUFFICIENT": 5}.get(conf, 50)
 
     # ── Answer section ──
-    answer_html = _render_citations_html(sections["answer"], chunks)
+    # _render_citations_html may return text with <a> citation links mixed in.
+    # We need to: HTML-escape the plain-text parts, preserve the <a> tags,
+    # and convert newlines to <br> so spaces are never swallowed by Streamlit's
+    # markdown processor.
+    raw_answer = sections["answer"]
+    # First, run citation rendering on the raw text to get <a> tags inserted
+    answer_with_links = _render_citations_html(raw_answer, chunks)
+    # Now split on existing <a ...>...</a> tags so we can escape the text parts
+    # but leave the HTML tags intact
+    parts = _re.split(r'(<a\s[^>]*>.*?</a>)', answer_with_links, flags=_re.DOTALL)
+    escaped_parts = []
+    for part in parts:
+        if part.startswith('<a '):
+            escaped_parts.append(part)  # already valid HTML
+        else:
+            # Escape HTML special chars in plain text
+            escaped = _html_mod.escape(part)
+            # Convert markdown **bold** → <strong>bold</strong>
+            escaped = _re.sub(r'\*\*(.+?)\*\*', r'<strong>\1</strong>', escaped)
+            # Convert newlines to <br> so line breaks are preserved in HTML
+            escaped = escaped.replace('\n', '<br>')
+            escaped_parts.append(escaped)
+    answer_html = ''.join(escaped_parts)
+
+    # ── Detect language direction ──
+    import re as _re2
+    arabic_chars = len(_re2.findall(r'[\u0600-\u06FF]', raw_answer))
+    is_rtl = arabic_chars > len(raw_answer) * 0.3
+    text_dir = "rtl" if is_rtl else "ltr"
+    text_align = "right" if is_rtl else "left"
+    font_family = "'Noto Naskh Arabic','Segoe UI',sans-serif" if is_rtl else "'Inter','Segoe UI',sans-serif"
+
+    # ── Confidence badge style ──
+    conf_badge = {
+        "HIGH":         ("✅", "#00c875", "rgba(0,200,117,0.12)", "rgba(0,200,117,0.35)"),
+        "MEDIUM":       ("⚡", "#f59e0b", "rgba(245,158,11,0.12)", "rgba(245,158,11,0.35)"),
+        "LOW":          ("⚠️", "#ef4444", "rgba(239,68,68,0.12)",  "rgba(239,68,68,0.35)"),
+        "INSUFFICIENT": ("❓", "#6b7280", "rgba(107,114,128,0.12)","rgba(107,114,128,0.35)"),
+    }.get(conf, ("❓", "#6b7280", "rgba(107,114,128,0.12)", "rgba(107,114,128,0.35)"))
+    conf_icon, conf_color, conf_bg, conf_border = conf_badge
 
     # ── Evidence source cards ──
     ev_cards = ""
     for i, chunk in enumerate(chunks[:5]):
-        sim = chunk.get("similarity", 0)
-        sc = "#00c875" if sim >= 0.55 else "#f59e0b" if sim >= 0.40 else "#e05252"
+        sim  = chunk.get("similarity", 0)
+        sc   = "#00c875" if sim >= 0.55 else "#f59e0b" if sim >= 0.40 else "#ef4444"
+        sc_bg= "rgba(0,200,117,0.08)" if sim >= 0.55 else "rgba(245,158,11,0.08)" if sim >= 0.40 else "rgba(239,68,68,0.08)"
         sim_pct = int(min(sim, 1.0) * 100)
-        doc = chunk.get("document_name", "Unknown").replace("_", " ").replace(".pdf", "").replace(".docx", "")
-        doc = _re.sub(r'\s+', ' ', doc).strip()
-        sec = chunk.get("section_title", "")
+        doc  = chunk.get("document_name","Unknown").replace("_"," ").replace(".pdf","").replace(".docx","")
+        doc  = _re2.sub(r'([a-z])([A-Z])', r'\1 \2', doc)
+        doc  = _re.sub(r'\s+', ' ', doc).strip()
+        sec  = chunk.get("section_title", "")
         page = chunk.get("page_number", "?")
-        chunk_id = chunk.get("chunk_id", "")[:8]
-        auth = "🏛️" if any(k in doc.lower() for k in ["nice","dsm","who","cdc","fda","peds"]) else "📚" if any(k in doc.lower() for k in ["eye-track","metaanalysis","fpsyt"]) else "📄"
+        auth_icon = "🏛️" if any(k in doc.lower() for k in ["nice","dsm","who","cdc","fda"]) else "📋"
+        rank_label = ["1st","2nd","3rd","4th","5th"][i] if i < 5 else f"{i+1}th"
         ev_cards += f"""
-        <div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:#0a1520;border-radius:8px;border:1px solid #1a2332;margin-bottom:4px">
-          <div style="min-width:28px;text-align:center">
-            <div style="background:{sc}20;color:{sc};border-radius:6px;padding:2px 6px;font-size:0.72rem;font-weight:700">{auth} {i+1}</div>
+        <div style="display:flex;align-items:center;gap:12px;padding:10px 14px;
+                    background:{sc_bg};border-radius:10px;
+                    border:1px solid {sc}30;margin-bottom:6px;
+                    transition:all 0.2s;">
+          <div style="flex-shrink:0;width:36px;height:36px;border-radius:50%;
+                      background:{sc}20;border:2px solid {sc}60;
+                      display:flex;align-items:center;justify-content:center;
+                      font-size:0.75rem;font-weight:800;color:{sc};">{i+1}</div>
+          <div style="flex:1;min-width:0;">
+            <div style="color:#e2f4ff;font-size:0.83rem;font-weight:600;
+                        white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+                        margin-bottom:2px;">{auth_icon} {doc[:50]}</div>
+            <div style="color:#6b8aaa;font-size:0.72rem;">{sec[:45] if sec else "—"} &nbsp;·&nbsp; p.{page}</div>
           </div>
-          <div style="flex:1;min-width:0">
-            <div style="color:#d4eaf8;font-size:0.82rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{doc[:45]}</div>
-            <div style="color:#5a7a9a;font-size:0.72rem">{sec[:35]} · p.{page}</div>
-          </div>
-          <div style="min-width:60px">
-            <div style="background:#1a2332;border-radius:3px;height:4px;overflow:hidden;margin-bottom:2px">
-              <div style="width:{sim_pct}%;height:100%;background:{sc};border-radius:3px"></div>
-            </div>
-            <div style="color:{sc};font-size:0.7rem;font-weight:600;text-align:right">{sim:.3f}</div>
+          <div style="flex-shrink:0;text-align:right;">
+            <div style="color:{sc};font-size:1rem;font-weight:800;line-height:1;">{sim:.3f}</div>
+            <div style="color:#4a6a8a;font-size:0.65rem;margin-top:2px;">similarity</div>
           </div>
         </div>"""
 
-    # ── Build final HTML ──
+    # ── Build final premium HTML ──
     html = f"""
-    <style>
-      .llm-section {{ margin-bottom:14px; }}
-      .llm-section-title {{
-        color:#5a7a9a; font-size:0.72rem; font-weight:700; text-transform:uppercase;
-        letter-spacing:1px; margin-bottom:6px; padding-bottom:4px;
-        border-bottom:1px solid #1a2332;
-      }}
-      .llm-answer-text {{ color:#d4eaf8; line-height:1.85; font-size:0.92rem; white-space: pre-wrap; word-spacing: normal; letter-spacing: normal; }}
-      .llm-answer-text p {{ margin:0 0 8px 0; }}
-      .llm-answer-text.rtl {{ direction: rtl; text-align: right; font-family: 'Noto Naskh Arabic', 'Inter', sans-serif; }}
-      .conf-meter {{ background:#1a2332; border-radius:6px; height:6px; overflow:hidden; margin-top:4px; }}
-      .conf-meter-fill {{ height:100%; border-radius:6px; transition:width 0.8s ease; }}
-    </style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Naskh+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  * {{ box-sizing:border-box; margin:0; padding:0; }}
+  body {{ background:transparent; }}
 
-    <div class="llm-section">
-      <div class="llm-section-title">📋 Clinical Answer</div>
-      <div class="llm-answer-text">{answer_html}</div>
+  .crag-card {{
+    background: linear-gradient(145deg, #0d1b2a 0%, #0f2035 100%);
+    border: 1px solid rgba(0,200,117,0.2);
+    border-radius: 16px;
+    overflow: hidden;
+    font-family: 'Inter', sans-serif;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05);
+  }}
+
+  /* ── Header bar ── */
+  .crag-header {{
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 20px;
+    background: linear-gradient(90deg, rgba(0,200,117,0.08) 0%, transparent 100%);
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+  }}
+  .crag-header-title {{
+    display: flex; align-items: center; gap: 8px;
+    font-size: 0.72rem; font-weight: 700; letter-spacing: 1.5px;
+    text-transform: uppercase; color: #00c875;
+  }}
+  .crag-header-dot {{
+    width: 8px; height: 8px; border-radius: 50%;
+    background: #00c875;
+    box-shadow: 0 0 6px #00c875;
+    animation: pulse 2s infinite;
+  }}
+  @keyframes pulse {{
+    0%,100% {{ opacity:1; transform:scale(1); }}
+    50%      {{ opacity:0.5; transform:scale(0.85); }}
+  }}
+  .crag-conf-badge {{
+    display: flex; align-items: center; gap: 6px;
+    padding: 4px 12px; border-radius: 20px;
+    background: {conf_bg}; border: 1px solid {conf_border};
+    font-size: 0.75rem; font-weight: 700; color: {conf_color};
+  }}
+
+  /* ── Answer body ── */
+  .crag-body {{ padding: 20px; }}
+  .crag-answer-text {{
+    font-size: 0.97rem; line-height: 1.95; color: #d4eaf8;
+    direction: {text_dir}; text-align: {text_align};
+    font-family: {font_family};
+    padding: 16px 18px;
+    background: rgba(255,255,255,0.03);
+    border-radius: 10px;
+    border: 1px solid rgba(255,255,255,0.06);
+    margin-bottom: 20px;
+  }}
+  .crag-answer-text strong {{ color: #e8f4ff; }}
+
+  /* ── Citation pill ── */
+  .citation-link {{
+    display: inline-flex; align-items: center; gap: 3px;
+    padding: 1px 8px 2px; border-radius: 20px;
+    font-size: 0.75rem; font-weight: 700;
+    text-decoration: none; margin: 0 2px;
+    border: 1px solid; cursor: pointer;
+    transition: all 0.15s;
+    vertical-align: baseline;
+  }}
+  .citation-link:hover {{ filter: brightness(1.3); transform: translateY(-1px); }}
+
+  /* ── Divider label ── */
+  .section-label {{
+    font-size: 0.65rem; font-weight: 700; letter-spacing: 1.4px;
+    text-transform: uppercase; color: #3a5a7a;
+    margin-bottom: 10px;
+    display: flex; align-items: center; gap: 8px;
+  }}
+  .section-label::after {{
+    content: ''; flex: 1; height: 1px;
+    background: linear-gradient(90deg, #1a2d40 0%, transparent 100%);
+  }}
+
+  /* ── Confidence gauge ── */
+  .conf-gauge-wrap {{
+    display: flex; align-items: center; gap: 14px;
+    padding: 12px 16px;
+    background: rgba(255,255,255,0.03); border-radius: 10px;
+    border: 1px solid rgba(255,255,255,0.05); margin-bottom: 16px;
+  }}
+  .conf-gauge-bar {{
+    flex: 1; height: 8px; background: rgba(255,255,255,0.07);
+    border-radius: 8px; overflow: hidden;
+  }}
+  .conf-gauge-fill {{
+    height: 100%; border-radius: 8px;
+    background: linear-gradient(90deg, {conf_color}80, {conf_color});
+    width: 0%;
+    animation: fillBar 1.2s ease forwards;
+    animation-delay: 0.3s;
+  }}
+  @keyframes fillBar {{
+    from {{ width: 0%; }}
+    to   {{ width: {conf_pct}%; }}
+  }}
+  .conf-label {{
+    font-size: 0.9rem; font-weight: 800;
+    color: {conf_color}; white-space: nowrap;
+    min-width: 90px; text-align: right;
+  }}
+
+  /* ── Disclaimer ── */
+  .crag-disclaimer {{
+    margin-top: 4px; padding: 10px 16px;
+    background: rgba(245,158,11,0.05);
+    border-left: 3px solid #f59e0b;
+    border-radius: 0 8px 8px 0;
+    font-size: 0.76rem; color: #6b8aaa; font-style: italic;
+    line-height: 1.6;
+  }}
+  .crag-disclaimer span {{ color: #f59e0b; font-weight: 600; font-style: normal; }}
+</style>
+
+<div class="crag-card">
+
+  <!-- Header -->
+  <div class="crag-header">
+    <div class="crag-header-title">
+      <div class="crag-header-dot"></div>
+      📋 Clinical Answer
     </div>
-
-    <div class="llm-section">
-      <div class="llm-section-title">📚 Evidence Sources ({len(chunks)} retrieved)</div>
-      {ev_cards}
+    <div class="crag-conf-badge">
+      {conf_icon} &nbsp;{conf}
     </div>
+  </div>
 
-    <div class="llm-section">
-      <div class="llm-section-title">🎯 Evidence Confidence</div>
-      <div style="display:flex;align-items:center;gap:12px">
-        <div style="flex:1">
-          <div class="conf-meter">
-            <div class="conf-meter-fill" style="width:{conf_pct}%;background:{conf_color}"></div>
-          </div>
-        </div>
-        <div style="min-width:80px;text-align:right">
-          <span style="color:{conf_color};font-size:0.9rem;font-weight:700">{conf}</span>
-        </div>
+  <!-- Body -->
+  <div class="crag-body">
+
+    <!-- Answer text -->
+    <div class="crag-answer-text">{answer_html}</div>
+
+    <!-- Evidence sources -->
+    <div class="section-label">📚 Evidence Sources &nbsp;({len(chunks)} retrieved)</div>
+    {ev_cards}
+
+    <!-- Confidence meter -->
+    <div class="section-label" style="margin-top:16px;">🎯 Evidence Confidence</div>
+    <div class="conf-gauge-wrap">
+      <div class="conf-gauge-bar">
+        <div class="conf-gauge-fill"></div>
       </div>
+      <div class="conf-label">{conf_icon} {conf}</div>
     </div>
 
-    <div style="padding:10px 14px;background:#0a1520;border-left:3px solid #f59e0b;border-radius:0 8px 8px 0;margin-top:4px">
-      <div style="color:#f59e0b;font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:2px">⚕️ Clinical Disclaimer</div>
-      <div style="color:#5a7a9a;font-size:0.78rem;font-style:italic">This output is generated from clinical guidelines for decision support only. It does not replace professional medical judgment. Consult a qualified healthcare provider for clinical decisions.</div>
+    <!-- Disclaimer -->
+    <div class="crag-disclaimer">
+      <span>⚕️ Clinical Use Only &nbsp;—&nbsp;</span>
+      Generated from peer-reviewed clinical guidelines for decision support only.
+      Does not replace professional medical judgment. Always consult a qualified
+      healthcare provider for clinical decisions.
     </div>
+
+  </div>
+</div>
     """
 
     return html
+
 
 
 # ─── SIDEBAR ─────────────────────────────────────────────────────────────────
@@ -1651,19 +1939,27 @@ with st.sidebar:
 # ─── HERO ─────────────────────────────────────────────────────────────────────────
 doc_count = len({c["document_name"] for c in chunks_data})
 chunk_count = len(chunks_data)
-st.markdown("""
+st.markdown(f"""
 <div class="hero">
-  <div class="hero-title">🔬 SpectrumLens <span style="font-size:0.9rem;color:#7ecfff;font-weight:400">نطاق الطيف</span></div>
-  <div class="hero-sub">
-    ASD Clinical Decision Support &nbsp;·&nbsp;
-    Evidence-First &nbsp;·&nbsp; Zero-Hallucination &nbsp;·&nbsp;
-    🌍 Arabic &amp; English &nbsp;·&nbsp; 3 LLM Providers &nbsp;·&nbsp; Grounded in Official Guidelines
+  <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:12px">
+    <div>
+      <div class="hero-title">
+        🔬 <span style="background:linear-gradient(135deg,#e8f6ff,#a0d8f8);-webkit-background-clip:text;-webkit-text-fill-color:transparent">Spectrum</span><span style="background:linear-gradient(135deg,#00c875,#34d399);-webkit-background-clip:text;-webkit-text-fill-color:transparent">Lens</span>
+        <span style="font-size:1rem;color:#4a6a8a;font-weight:400;-webkit-text-fill-color:#4a6a8a"> &nbsp;نطاق الطيف</span>
+      </div>
+      <div class="hero-sub">ASD Clinical Decision Support &nbsp;·&nbsp; Zero-Hallucination &nbsp;·&nbsp; Bilingual EN/AR &nbsp;·&nbsp; 3 LLM Providers</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:6px;padding:6px 14px;background:rgba(0,200,117,0.08);border:1px solid rgba(0,200,117,0.2);border-radius:20px">
+      <div style="width:8px;height:8px;border-radius:50%;background:#00c875;box-shadow:0 0 6px #00c875;animation:none"></div>
+      <span style="font-size:0.72rem;font-weight:700;color:#00c875">LIVE</span>
+    </div>
   </div>
-  <div style="display:flex;gap:12px;margin-top:0.8rem;flex-wrap:wrap">
-    <span style="background:#00c87520;color:#00c875;padding:3px 10px;border-radius:12px;font-size:0.72rem;font-weight:600">✅ Day 3: Structured Generation</span>
-    <span style="background:#7ecfff20;color:#7ecfff;padding:3px 10px;border-radius:12px;font-size:0.72rem;font-weight:600">✅ Day 4: Safety & Guardrails</span>
-    <span style="background:#f59e0b20;color:#f59e0b;padding:3px 10px;border-radius:12px;font-size:0.72rem;font-weight:600">📊 50-Question Eval</span>
-    <span style="background:#a78bfa20;color:#a78bfa;padding:3px 10px;border-radius:12px;font-size:0.72rem;font-weight:600">🏥 {doc_count} Clinical PDFs</span>
+  <div style="display:flex;gap:8px;margin-top:1rem;flex-wrap:wrap">
+    <span class="hero-tag" style="color:#00c875;border-color:rgba(0,200,117,0.3);background:rgba(0,200,117,0.08)">✅ Structured Generation</span>
+    <span class="hero-tag" style="color:#7ecfff;border-color:rgba(126,207,255,0.25);background:rgba(126,207,255,0.06)">🛡️ Safety Guardrails</span>
+    <span class="hero-tag" style="color:#f59e0b;border-color:rgba(245,158,11,0.3);background:rgba(245,158,11,0.06)">📊 50-Q Eval Harness</span>
+    <span class="hero-tag" style="color:#a78bfa;border-color:rgba(167,139,250,0.3);background:rgba(167,139,250,0.06)">🏥 {doc_count} Clinical PDFs · {chunk_count:,} Chunks</span>
+    <span class="hero-tag" style="color:#34d399;border-color:rgba(52,211,153,0.3);background:rgba(52,211,153,0.06)">🌍 Arabic + English</span>
   </div>
 </div>
 """, unsafe_allow_html=True)
@@ -1816,16 +2112,23 @@ with tab_search:
         #  EVIDENCE PANEL — shown BEFORE generation (as judges require)
         # ════════════════════════════════════════════════════════════════════
         st.markdown("---")
-        st.markdown("## 📋 Evidence Panel")
-        st.caption(
-            f"Retrieved **{len(results)}** chunks in **{ms:.0f} ms** "
-            f"{'(incl. reranker ' + str(int(reranker_ms)) + 'ms)' if reranker_ms else ''} · "
-            f"Mode: `{search_mode}` · Threshold: `{thresh:.2f}` · Model: `{EMBED_MODEL}` · "
-            f"Total index: **{len(chunks_data)}** chunks"
-        )
+        st.markdown(f"""
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.5rem">
+          <div style="display:flex;align-items:center;gap:10px">
+            <div style="font-size:1.1rem;font-weight:800;color:#e2f4ff">📋 Evidence Panel</div>
+            <div style="padding:2px 10px;border-radius:12px;background:rgba(59,130,246,0.12);border:1px solid rgba(59,130,246,0.3);color:#60a5fa;font-size:0.7rem;font-weight:700">{len(results)} chunks</div>
+          </div>
+          <div style="font-size:0.72rem;color:#3a5a7a">{ms:.0f} ms {'· reranker +'+str(int(reranker_ms))+'ms' if reranker_ms else ''} · {search_mode} · threshold {thresh:.2f}</div>
+        </div>
+        """, unsafe_allow_html=True)
 
         if not results:
-            st.warning("⚠️ No evidence above similarity threshold. The system will refuse to generate an answer (Safe Failure).")
+            st.markdown("""
+            <div class="stop-box" style="display:flex;align-items:center;gap:12px">
+              <div style="font-size:2rem">⛔</div>
+              <div><div style="font-size:0.9rem;font-weight:700;margin-bottom:4px">No Evidence Retrieved — Safe Failure</div>
+              <div style="font-size:0.82rem;opacity:0.8">No chunks above similarity threshold. SpectrumLens refuses to hallucinate.</div></div>
+            </div>""", unsafe_allow_html=True)
         else:
             # ── Confidence Summary Bar ──
             top_sim = max(c.get("similarity", 0) for c in results)
@@ -1833,19 +2136,25 @@ with tab_search:
             unique_docs = len(set(c.get("document_name", "") for c in results))
             conf = estimate_confidence(results, "")
             conf_colors = {"HIGH": "#00c875", "MEDIUM": "#f59e0b", "LOW": "#ef4444", "INSUFFICIENT": "#6b7280"}
+            conf_icons  = {"HIGH": "✅", "MEDIUM": "⚡", "LOW": "⚠️", "INSUFFICIENT": "❓"}
             conf_color = conf_colors.get(conf, "#6b7280")
+            conf_icon  = conf_icons.get(conf, "❓")
             bar_width = int(min(top_sim, 1.0) * 100)
             st.markdown(f"""
-            <div style="background:#0d1b2a;border:1px solid #1a2332;border-radius:8px;padding:10px 16px;margin-bottom:12px;display:flex;align-items:center;gap:16px;">
+            <div style="background:linear-gradient(145deg,#0d1b2a,#0f2035);border:1px solid rgba(255,255,255,0.07);border-radius:14px;padding:14px 18px;margin-bottom:14px;display:flex;align-items:center;gap:16px;box-shadow:0 2px 12px rgba(0,0,0,0.3)">
               <div style="flex:1">
-                <div style="color:#8ba6c0;font-size:0.78rem;margin-bottom:4px">Evidence Confidence · {unique_docs} source{'' if unique_docs==1 else 's'} retrieved</div>
-                <div style="background:#1a2332;border-radius:4px;height:8px;overflow:hidden">
-                  <div style="background:{conf_color};width:{bar_width}%;height:100%;border-radius:4px;transition:width 0.5s"></div>
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+                  <span style="font-size:0.67rem;font-weight:800;text-transform:uppercase;letter-spacing:1.2px;color:#3a5a7a">Evidence Confidence</span>
+                  <span style="font-size:0.67rem;color:#3a5a7a">·</span>
+                  <span style="font-size:0.67rem;color:#3a5a7a">{unique_docs} source{'s' if unique_docs!=1 else ''} · top {top_sim:.3f} · avg {avg_sim:.3f}</span>
+                </div>
+                <div style="background:rgba(255,255,255,0.07);border-radius:8px;height:8px;overflow:hidden">
+                  <div style="background:linear-gradient(90deg,{conf_color}80,{conf_color});width:{bar_width}%;height:100%;border-radius:8px;transition:width 0.6s ease"></div>
                 </div>
               </div>
-              <div style="text-align:center;min-width:80px">
-                <div style="color:{conf_color};font-size:1.1rem;font-weight:700">{conf}</div>
-                <div style="color:#8ba6c0;font-size:0.7rem">Top: {top_sim:.3f} · Avg: {avg_sim:.3f}</div>
+              <div style="text-align:center;min-width:90px;flex-shrink:0">
+                <div style="color:{conf_color};font-size:1rem;font-weight:800">{conf_icon} {conf}</div>
+                <div style="color:#3a5a7a;font-size:0.65rem;margin-top:2px">{bar_width}% signal</div>
               </div>
             </div>
             """, unsafe_allow_html=True)
@@ -1895,7 +2204,12 @@ with tab_search:
 
         # ── Generation ───────────────────────────────────────────────────────
         st.markdown("---")
-        st.markdown("## 🧠 LLM Answer (CRAG)")
+        st.markdown("""
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:0.5rem">
+          <div style="font-size:1.1rem;font-weight:800;color:#e2f4ff">🧠 LLM Answer</div>
+          <div style="padding:2px 10px;border-radius:12px;background:rgba(0,200,117,0.1);border:1px solid rgba(0,200,117,0.25);color:#00c875;font-size:0.68rem;font-weight:700">CRAG Pipeline</div>
+        </div>
+        """, unsafe_allow_html=True)
 
         if not show_gen:
             st.info("💡 Enable **LLM Generation** in the sidebar to activate Groq CRAG generation.")
@@ -1936,12 +2250,15 @@ with tab_search:
             if verdict is None:
                 verdict = "SUFFICIENT"
 
-            badge_color = "#00c875" if verdict=="SUFFICIENT" else "#e05252"
-            badge_text  = verdict
+            _vbg = {"SUFFICIENT":"rgba(0,200,117,0.1)","INSUFFICIENT":"rgba(239,68,68,0.1)"}.get(verdict,"rgba(107,114,128,0.1)")
+            _vc  = {"SUFFICIENT":"#00c875","INSUFFICIENT":"#ef4444"}.get(verdict,"#6b7280")
+            _vbd = {"SUFFICIENT":"rgba(0,200,117,0.3)","INSUFFICIENT":"rgba(239,68,68,0.3)"}.get(verdict,"rgba(107,114,128,0.3)")
+            _vi  = {"SUFFICIENT":"✅","INSUFFICIENT":"⛔"}.get(verdict,"❓")
             st.markdown(f"""
-            <div style="margin-bottom:1rem">
-              Verdict: <span style="background:{badge_color};color:#000;padding:0.2rem 0.7rem;border-radius:12px;font-weight:700">{badge_text}</span>
-              &nbsp;<small style="color:#8ba6c0">({gen_ms:.0f} ms, streaming)</small>
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:1rem">
+              <span style="font-size:0.67rem;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:#3a5a7a">Verdict</span>
+              <span style="display:inline-flex;align-items:center;gap:5px;background:{_vbg};color:{_vc};border:1px solid {_vbd};padding:3px 12px;border-radius:20px;font-size:0.78rem;font-weight:700">{_vi} {verdict}</span>
+              <span style="color:#3a5a7a;font-size:0.72rem">{gen_ms:.0f} ms</span>
             </div>
             """, unsafe_allow_html=True)
 
@@ -1950,14 +2267,11 @@ with tab_search:
             elif verdict == "SKIPPED":
                 st.info(full_answer)
             else:
-                # Render structured answer with clean sections
+                # Render structured answer — use st.html() which bypasses Streamlit's
+                # markdown parser. st.markdown(unsafe_allow_html=True) mangles multi-div
+                # HTML, strips <a> tags, and collapses Arabic whitespace.
                 answer_html = _render_structured_answer(full_answer, results)
-                # Also display plain text version for accessibility
-                st.markdown("### 📋 Clinical Answer (Plain Text)")
-                st.markdown(full_answer)
-                st.markdown("---")
-                st.markdown("### 📋 Clinical Answer (Formatted)")
-                st.markdown(f'<div class="answer-box">{answer_html}</div>', unsafe_allow_html=True)
+                st.html(answer_html)
                 # Copy button (plain text)
                 st.button("📋 Copy Answer", key=f"copy_{query[:20]}",
                           on_click=lambda: st.session_state.update({"_copy_text": full_answer}))
@@ -1996,7 +2310,12 @@ with tab_search:
             # ── Safety & Grounding Metrics (Day 4) ──
             if verdict == "SUFFICIENT" and results:
                 st.markdown("---")
-                st.markdown("## 🛡️ Safety & Grounding Metrics")
+                st.markdown("""
+                <div style="display:flex;align-items:center;gap:10px;margin-bottom:0.5rem">
+                  <div style="font-size:1.1rem;font-weight:800;color:#e2f4ff">🛡️ Safety & Grounding</div>
+                  <div style="padding:2px 10px;border-radius:12px;background:rgba(59,130,246,0.1);border:1px solid rgba(59,130,246,0.25);color:#60a5fa;font-size:0.68rem;font-weight:700">Day 4 Compliance</div>
+                </div>
+                """, unsafe_allow_html=True)
                 # Match both old [SOURCE: ...] and new 【Source N】 formats
                 citations_found = re.findall(r'【Source \d+】|\[SOURCE:.*?\]', full_answer)
                 unique_cited_docs = len(set(c.lower()[:20] for c in citations_found))
@@ -2430,7 +2749,11 @@ with tab_compare:
 # ══════════════════════════════════════════════════════════════════════════════
 st.markdown("---")
 st.markdown("""
-<div style="background:#ff525215;border:1px solid #ff525240;border-radius:8px;padding:12px;margin-top:24px;font-size:0.85rem;color:#ff5252;">
-⚠️ <b>Clinical Disclaimer</b>: SpectrumLens is a clinical decision SUPPORT tool. It retrieves and cites official guidelines but does NOT provide medical advice, diagnosis, or treatment recommendations. All outputs must be validated by a qualified healthcare professional.
+<div style="background:rgba(245,158,11,0.05);border:1px solid rgba(245,158,11,0.2);border-left:4px solid #f59e0b;border-radius:0 12px 12px 0;padding:14px 20px;margin-top:16px;display:flex;align-items:flex-start;gap:12px">
+  <div style="font-size:1.4rem;flex-shrink:0">⚕️</div>
+  <div>
+    <div style="font-size:0.75rem;font-weight:800;color:#f59e0b;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">Clinical Disclaimer</div>
+    <div style="font-size:0.82rem;color:#8ba6c0;line-height:1.6">SpectrumLens is a clinical decision <strong style="color:#d4e8f8">support</strong> tool only. It retrieves and cites official guidelines but does <strong style="color:#f59e0b">NOT</strong> provide medical advice, diagnosis, or treatment recommendations. All outputs must be validated by a qualified healthcare professional before clinical use.</div>
+  </div>
 </div>
 """, unsafe_allow_html=True)

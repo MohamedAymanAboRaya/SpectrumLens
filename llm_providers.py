@@ -52,9 +52,12 @@ PROVIDER_ORDER = ["agentrouter", "openrouter", "groq"]
 
 
 def _strip_think(raw: str) -> str:
-    """Remove <think>...</think> blocks from LLM output."""
+    """Remove <think>...</think> blocks from LLM output.
+    IMPORTANT: No .strip() here — called on individual streaming tokens,
+    stripping would eat the boundary spaces between words.
+    """
     import re
-    return re.sub(r'<think>.*?</think>', '', raw, flags=re.DOTALL).strip()
+    return re.sub(r'<think>.*?</think>', '', raw, flags=re.DOTALL)
 
 
 class LLMProvider:
@@ -192,17 +195,30 @@ class LLMProvider:
                     continue
 
     def _stream_groq(self, messages: List[Dict], model: str, temperature: float, max_tokens: int) -> Generator[str, None, None]:
-        """Stream from Groq."""
+        """Stream from Groq.
+
+        Groq's streaming API for models like allam-2-7b and openai/gpt-oss-120b
+        drops the leading whitespace from many token deltas. This means word-boundary
+        spaces are lost when tokens are concatenated, producing concatenated words.
+
+        Fix: request the FULL (non-streaming) response which always has correct spacing,
+        then yield it in sentence-sized chunks to simulate streaming in the UI.
+        """
         from groq import Groq
         client = Groq(api_key=_get_key("GROQ_API_KEY"))
-        stream = client.chat.completions.create(
+        # Use non-streaming to guarantee correct whitespace
+        resp = client.chat.completions.create(
             model=model, messages=messages, temperature=temperature,
-            max_tokens=max_tokens, stream=True,
+            max_tokens=max_tokens, stream=False,
         )
-        for chunk in stream:
-            delta = chunk.choices[0].delta.content or ""
-            if delta:
-                yield _strip_think(delta)
+        full_text = _strip_think_full(resp.choices[0].message.content or "")
+        if not full_text:
+            return
+        # Yield in ~60-char sentence chunks to simulate progressive display
+        import re as _re
+        chunks = _re.split(r'(?<=[.!?،؟])\s+', full_text)
+        for ch in chunks:
+            yield ch + " "
 
     def call(self, messages: List[Dict], role: str = "generate",
              model_override: Optional[str] = None, temperature: float = 0,
