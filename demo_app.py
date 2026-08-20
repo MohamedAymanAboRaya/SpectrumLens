@@ -1568,6 +1568,18 @@ def _parse_answer_sections(raw: str) -> dict:
 
     sections["answer"] = answer
 
+    # ── Fallback: if parsed answer is empty but raw has content, use raw minus footer ──
+    if not sections["answer"] and raw.strip():
+        fallback = raw
+        fallback = _re.sub(r'\n*---\n*\*\*Confidence:\*\*.*$', '', fallback, flags=_re.DOTALL)
+        fallback = _re.sub(r'\n*⚠️\s*\d+\s*claim.*?evidence\.?$', '', fallback, flags=_re.DOTALL)
+        fallback = _re.sub(r'⚕️\s*(?:Clinical Use Only|هذا الإخراج)[^\n]*', '', fallback, flags=_re.IGNORECASE)
+        fallback = _re.sub(r'📚\s*\*\*(?:Supporting Evidence|الأدلة)[^\n]*', '', fallback, flags=_re.IGNORECASE)
+        fallback = _re.sub(r'🎯\s*\*\*(?:Confidence|الثقة)[^\n]*', '', fallback, flags=_re.IGNORECASE)
+        fallback = fallback.strip()
+        if fallback:
+            sections["answer"] = fallback
+
     # ── Extract evidence items ──
     ev_patterns = [
         r'【Source (\d+)】\s*(.*?)(?=【Source|\n\n|$)',
