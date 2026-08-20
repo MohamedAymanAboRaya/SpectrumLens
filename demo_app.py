@@ -2123,7 +2123,7 @@ with tab_search:
                     results = [
                         {**r.model_dump(), "vector_score": r.vector_score, "rerank_score": r.rerank_score,
                          "original_text": r.content, "text": r.content,
-                         "similarity": r.vector_score if r.vector_score else r.rerank_score}
+                         "similarity": r.rerank_score if r.rerank_score else r.vector_score}
                         for r in ranked
                     ]
                 except Exception as e:
