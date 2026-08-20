@@ -1288,16 +1288,12 @@ def groq_generate(query: str, chunks: List[Dict]) -> tuple[str, str]:
     query_lang = detect_language(query)
 
     # ── 1. Keyword scope check (no LLM) ──
-    ASD_KEYWORDS = {"autism", "autistic", "asd", "m-chat", "dsm-5", "aba",
-                    "nice", "aap", "spectrum", "neurodevelopment", "eye-tracking",
-                    "melatonin", "risperidone", "aripiprazole", "irritability",
-                    "screening", "diagnosis", "behavioral", "social communication"}
+    # Only block OBVIOUSLY irrelevant queries; let semantic search handle the rest
     NON_ASD_KEYWORDS = {"restaurant", "weather", "football", "soccer", "world cup",
                         "finance", "stock", "recipe", "travel", "hotel", "movie", "music"}
     q_lower = query.lower()
-    has_asd_kw = any(kw in q_lower for kw in ASD_KEYWORDS)
     has_non_asd_kw = any(kw in q_lower for kw in NON_ASD_KEYWORDS)
-    if has_non_asd_kw and not has_asd_kw:
+    if has_non_asd_kw:
         return "INSUFFICIENT", (
             "⛔ This query is outside the ASD clinical scope. "
             "SpectrumLens answers autism spectrum disorder clinical guideline questions only."
@@ -1346,18 +1342,13 @@ def groq_generate_stream(query: str, chunks: List[Dict]):
     query_lang = detect_language(query)
 
     # ── 1. Keyword scope check (NO LLM call — instant) ──
-    ASD_KEYWORDS = {"autism", "autistic", "asd", "m-chat", "dsm-5", "dsm 5", "aba",
-                    "nice", "aap", "spectrum", "neurodevelopment", "eye-tracking",
-                    "melatonin", "risperidone", "aripiprazole", "irritability",
-                    "screening", "diagnosis", "therapist", "behavioral", "social communication",
-                    "repetitive behavior", "sensory", "speech delay", "developmental"}
+    # Only block OBVIOUSLY irrelevant queries; let semantic search handle the rest
     NON_ASD_KEYWORDS = {"restaurant", "weather", "football", "soccer", "world cup",
                         "finance", "stock", "recipe", "travel", "hotel", "movie",
                         "music", "fashion", "cooking", "gym", "salary"}
     q_lower = query.lower()
-    has_asd_kw = any(kw in q_lower for kw in ASD_KEYWORDS)
     has_non_asd_kw = any(kw in q_lower for kw in NON_ASD_KEYWORDS)
-    if has_non_asd_kw and not has_asd_kw:
+    if has_non_asd_kw:
         yield "INSUFFICIENT", (
             "⛔ This query is outside the ASD clinical scope. "
             "SpectrumLens answers autism spectrum disorder clinical guideline questions only."
