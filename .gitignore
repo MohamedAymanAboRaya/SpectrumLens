@@ -1,9 +1,5 @@
 .env
 data/raw_pdfs/
-data/processed_chunks/
-data/precomputed_embeddings.npz
-data/embedding_index.pkl
-data/supabase_embeddings.npz
 __pycache__/
 *.pyc
 *.pyo
