@@ -27,6 +27,20 @@ from llm_providers import LLMProvider, get_provider
 
 load_dotenv()
 
+# ─── Streamlit Cloud secrets → os.environ (bridge) ──────────────────────────
+_SECRET_KEYS = [
+    "GROQ_API_KEY", "OPENROUTER_API_KEY", "AGENTROUTER_API_KEY",
+    "AGENTROUTER_BASE_URL", "COHERE_API_KEY", "GEMINI_API_KEY",
+    "HF_TOKEN", "JINA_API_KEY", "SUPABASE_URL", "SUPABASE_KEY",
+]
+try:
+    for _k in _SECRET_KEYS:
+        if _k not in os.environ or not os.environ[_k]:
+            if _k in st.secrets:
+                os.environ[_k] = str(st.secrets[_k])
+except Exception:
+    pass
+
 # ─── Page Config ─────────────────────────────────────────────────────────────
 st.set_page_config(
     page_title="SpectrumLens — ASD Clinical Decision Support",
