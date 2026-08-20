@@ -1036,7 +1036,9 @@ def estimate_confidence(chunks: List[Dict], answer: str) -> str:
     if not chunks:
         return "INSUFFICIENT"
     top_sim = max(c.get("similarity", 0) for c in chunks)
-    avg_sim = sum(c.get("similarity", 0) for c in chunks) / len(chunks)
+    sims = sorted(c.get("similarity", 0) for c in chunks)
+    mid = len(sims) // 2
+    avg_sim = sims[mid] if len(sims) % 2 else (sims[mid - 1] + sims[mid]) / 2
     # Match both old [SOURCE: ...] and new 【Source N】 citation formats
     citations = re.findall(r'\[SOURCE:.*?\]|【Source \d+】', answer or '')
     unique_docs = len(set(c.get("document_name", "") for c in chunks))
