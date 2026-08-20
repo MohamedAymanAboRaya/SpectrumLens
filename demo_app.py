@@ -1043,10 +1043,10 @@ def estimate_confidence(chunks: List[Dict], answer: str) -> str:
     cited_docs = len(set(c.lower()[:20] for c in citations))
     # Score based on evidence quality (calibrated for 3072-dim embeddings)
     score = 0
-    if top_sim >= 0.60: score += 3
-    elif top_sim >= 0.50: score += 2
+    if top_sim >= 0.55: score += 3
+    elif top_sim >= 0.45: score += 2
     elif top_sim >= 0.35: score += 1
-    if avg_sim >= 0.50: score += 1
+    if avg_sim >= 0.45: score += 1
     if len(citations) >= 2: score += 2
     elif len(citations) >= 1: score += 1
     if cited_docs >= 2: score += 1
