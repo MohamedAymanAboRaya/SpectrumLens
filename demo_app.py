@@ -2185,7 +2185,9 @@ with tab_search:
             for i, chunk in enumerate(results):
                 cls = "ev-card top" if i == 0 else "ev-card"
                 top_lbl = " 🥇 Top Match" if i == 0 else ""
-                sim = chunk.get("similarity", 0)
+                rerank_sim = chunk.get("rerank_score", 0) or chunk.get("similarity", 0)
+                cosine_sim = chunk.get("vector_score", 0)
+                sim = rerank_sim
                 sc = score_class(sim)
                 lang = chunk.get("language", "en")
                 lang_badge = f'<span class="lang-badge-ar">🇸🇦 AR</span>' if lang == "ar" else f'<span class="lang-badge-en">🇬🇧 EN</span>'
@@ -2200,16 +2202,21 @@ with tab_search:
                     auth_badge = '<span style="background:#7ecfff30;color:#7ecfff;padding:2px 8px;border-radius:10px;font-size:0.72rem;font-weight:600;margin-left:6px">📚 Peer-Reviewed</span>'
                 else:
                     auth_badge = '<span style="background:#8ba6c030;color:#8ba6c0;padding:2px 8px;border-radius:10px;font-size:0.72rem;font-weight:600;margin-left:6px">📄 Toolkit</span>'
-                # Similarity bar width
+                # Similarity bar width (use rerank score for bar)
                 sim_pct = int(min(sim, 1.0) * 100)
+                # Score display: rerank + cosine
+                if cosine_sim and cosine_sim > 0:
+                    score_display = f'<div style="font-size:0.75rem;font-weight:700;color:{("#00c875" if sim>=0.35 else "#f59e0b" if sim>=0.25 else "#ef4444")}">{sim:.3f} <span style="font-size:0.6rem;opacity:0.7;font-weight:400">(cosine {cosine_sim:.3f})</span></div>'
+                else:
+                    score_display = f'<div style="font-size:0.75rem;font-weight:700;color:{("#00c875" if sim>=0.55 else "#f59e0b" if sim>=0.40 else "#ef4444")}">{sim:.3f}</div>'
                 st.markdown(f"""
                 <div class="{cls}" id="ev-{i+1}">
                   <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
                     <div class="ev-rank" style="margin:0">Evidence #{i+1}{top_lbl}</div>
                     <div style="flex:1;height:4px;background:#1e293b;border-radius:2px;overflow:hidden">
-                      <div style="width:{sim_pct}%;height:100%;background:{'#00c875' if sim>=0.55 else '#f59e0b' if sim>=0.40 else '#ef4444'};border-radius:2px"></div>
+                      <div style="width:{sim_pct}%;height:100%;background:{("#00c875" if sim>=0.35 else "#f59e0b" if sim>=0.25 else "#ef4444")};border-radius:2px"></div>
                     </div>
-                    <div style="font-size:0.75rem;font-weight:700;color:{'#00c875' if sim>=0.55 else '#f59e0b' if sim>=0.40 else '#ef4444'}">{sim:.3f}</div>
+                    {score_display}
                   </div>
                   <div class="ev-title">
                     📄 {chunk['document_name']}
