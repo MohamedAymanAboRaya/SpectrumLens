@@ -251,14 +251,14 @@ class CohereReranker:
             return []
 
         # Filter out chunks with empty/whitespace-only content
-        valid_chunks = [(i, c) for i, c in enumerate(chunks) if (c.get("content", "") or c.get("text", "")).strip()]
+        valid_chunks = [(i, c) for i, c in enumerate(chunks) if (c.get("content", "") or c.get("text", "") or c.get("original_text", "")).strip()]
         if not valid_chunks:
             return []
 
         valid_indices = [vi[0] for vi in valid_chunks]
         valid_chunks = [vi[1] for vi in valid_chunks]
 
-        documents = [c.get("content", "") or c.get("text", "") for c in valid_chunks]
+        documents = [c.get("content", "") or c.get("text", "") or c.get("original_text", "") for c in valid_chunks]
         response = self._client.rerank(
             model=self.MODEL_NAME,
             query=query,
@@ -277,7 +277,7 @@ class CohereReranker:
                     document_name=chunk.get("document_name", "unknown"),
                     section_title=chunk.get("section_title", "unknown"),
                     page_number=chunk.get("page_number", "unknown"),
-                    content=chunk.get("content", "") or chunk.get("text", ""),
+                    content=chunk.get("content", "") or chunk.get("text", "") or chunk.get("original_text", ""),
                     vector_score=chunk.get("similarity", 0.0),
                     rerank_score=result.relevance_score,
                 )
