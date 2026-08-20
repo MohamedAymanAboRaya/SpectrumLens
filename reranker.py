@@ -322,16 +322,12 @@ class ClinicalReranker:
             logger.info("Reranker backend: Cohere Rerank v3.5 (best quality)")
             self._backend = CohereReranker()
             if self.rerank_threshold is None:
-                self.rerank_threshold = 0.40
+                self.rerank_threshold = 0.0
         elif os.environ.get("OPENROUTER_API_KEY"):
             logger.info("Reranker backend: OpenRouter (nvidia/llama-nemotron-rerank-vl-1b-v2, FREE)")
             self._backend = OpenRouterReranker()
             if self.rerank_threshold is None:
                 self.rerank_threshold = float("-inf")
-            logger.info("Reranker backend: Cohere Rerank v3")
-            self._backend = CohereReranker()
-            if self.rerank_threshold is None:
-                self.rerank_threshold = 0.40
         else:
             logger.info("Reranker backend: Local CrossEncoder (ms-marco-MiniLM-L-6-v2)")
             self._backend = LocalCrossEncoderReranker()

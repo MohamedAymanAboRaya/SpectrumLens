@@ -2096,7 +2096,8 @@ with tab_search:
                 try:
                     from reranker import ClinicalReranker
                     rr = ClinicalReranker(top_n=top_k)
-                    ranked = rr.rerank(query, results)
+                    rerank_query = _expand_arabic_query(query)
+                    ranked = rr.rerank(rerank_query, results)
                     results = [
                         {**r.model_dump(), "vector_score": r.vector_score, "rerank_score": r.rerank_score,
                          "original_text": r.content, "text": r.content,
