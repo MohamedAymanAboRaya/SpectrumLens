@@ -2091,7 +2091,7 @@ with tab_search:
         # ── Two-Stage Reranking (optional) ─────────────────────────────────
         reranker_ms = 0
         if use_reranker and results and len(results) > 1:
-            with st.spinner("🔄 Reranking with Jina Reranker v3.5…"):
+            with st.spinner("🔄 Reranking with Cohere Rerank v3.5…"):
                 t_r = time.perf_counter()
                 try:
                     from reranker import ClinicalReranker
