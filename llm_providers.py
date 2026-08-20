@@ -170,6 +170,8 @@ class LLMProvider:
                     break
                 try:
                     chunk = json.loads(data)
+                    if "error" in chunk:
+                        raise RuntimeError(f"AgentRouter stream error: {chunk['error']}")
                     delta = chunk.get("choices", [{}])[0].get("delta", {}).get("content", "")
                     if delta:
                         yield _strip_think(delta)
@@ -298,13 +300,18 @@ class LLMProvider:
                 self._last_provider = provider
                 self._last_model = model
                 logger.info(f"Streaming OK: provider={provider}, model={model}")
+                token_count = 0
                 for token in gen:
                     yield (token, provider)
-                return
+                    token_count += 1
+                if token_count > 0:
+                    return
+                logger.warning(f"Stream returned 0 tokens: provider={provider}, trying next")
+                continue
 
             except Exception as e:
                 logger.warning(f"Stream failed: provider={provider}, model={model}, error={e}")
-                # Fall back to non-streaming
+                # Fall back to non-streaming call
                 try:
                     text, src = self.call(messages, role="generate", model_override=model_override,
                                          temperature=temperature, max_tokens=max_tokens)

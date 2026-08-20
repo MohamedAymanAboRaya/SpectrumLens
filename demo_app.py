@@ -391,7 +391,10 @@ def _agentrouter_dns_bypass():
             return _orig_getaddrinfo(host, port, *a, **kw)
         _sock.getaddrinfo = _patched
 
-_agentrouter_dns_bypass()
+try:
+    _agentrouter_dns_bypass()
+except Exception:
+    pass
 
 
 # Arabic → English clinical entity mapping for cross-lingual retrieval boost
