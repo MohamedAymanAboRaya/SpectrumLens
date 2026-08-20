@@ -1,6 +1,6 @@
 # ─── Core PDF & Text Processing ──────────────────────────────────────────────────
 pymupdf==1.28.2           # imports as `fitz` — renamed package with pre-built wheels for Streamlit Cloud
-tiktoken==0.6.0
+tiktoken>=0.8.0            # pre-built wheels available for Streamlit Cloud
 langchain-text-splitters==0.0.1
 
 # ─── Data Validation ─────────────────────────────────────────────────────────────
