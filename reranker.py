@@ -5,10 +5,11 @@ Cross-encoder reranking layer between vector retrieval and CRAG critic.
 
 Strategy: Retrieve MORE (top-50) → Rerank → Keep FEWER (top-5).
 
-Three backends (auto-selected by priority):
-    1. COHERE  — Cohere Rerank v3.5 (best quality, 100+ languages, Arabic+English)
-    2. OPENROUTER — nvidia/llama-nemotron-rerank-vl-1b-v2 (FREE, multilingual)
-    3. LOCAL   — sentence-transformers CrossEncoder (free, offline fallback)
+Four backends (auto-selected by priority):
+    1. JINA     — Jina Reranker v3.5 (0.6B params, 131K context, multilingual, fastest)
+    2. COHERE   — Cohere Rerank v3.5 (best quality, 100+ languages, Arabic+English)
+    3. OPENROUTER — nvidia/llama-nemotron-rerank-vl-1b-v2 (FREE, multilingual)
+    4. LOCAL    — sentence-transformers CrossEncoder (free, offline fallback)
 """
 
 import os
@@ -34,7 +35,115 @@ class RankedChunk(BaseModel):
     rerank_score: float     # cross-encoder score (higher = more relevant)
 
 
-# ─── OpenRouter Reranker (PRIMARY) ────────────────────────────────────────────────
+# ─── Jina Reranker v3.5 (PRIMARY — fastest, 131K context) ─────────────────────
+class JinaReranker:
+    """
+    Uses Jina Reranker v3.5 — 0.6B parameter multilingual listwise reranker.
+    131K context window, hybrid attention + self-distillation.
+    Drop-in replacement for Cohere, faster with better multilingual support.
+    """
+
+    API_URL = "https://api.jina.ai/v1/rerank"
+    MODEL = "jina-reranker-v3.5"
+
+    def __init__(self):
+        self.api_key = os.environ.get("JINA_API_KEY", "")
+        if not self.api_key:
+            raise EnvironmentError("JINA_API_KEY not set — cannot use Jina reranker")
+        self._session = _requests.Session()
+        self._session.headers.update({
+            "Authorization": f"Bearer {self.api_key}",
+            "Content-Type": "application/json",
+        })
+        logger.info("Jina Reranker v3.5 initialised (0.6B, 131K context, multilingual)")
+
+    def rerank(
+        self,
+        query: str,
+        chunks: List[Dict[str, Any]],
+        top_n: int = 5,
+    ) -> List[RankedChunk]:
+        if not chunks:
+            return []
+
+        # Filter out chunks with empty/whitespace-only content
+        valid_chunks = [(i, c) for i, c in enumerate(chunks)
+                        if (c.get("content") or c.get("text") or c.get("original_text", "")).strip()]
+        if not valid_chunks:
+            return []
+
+        valid_indices = [vi[0] for vi in valid_chunks]
+        valid_chunks = [vi[1] for vi in valid_chunks]
+
+        documents = [c.get("content") or c.get("text") or c.get("original_text", "") for c in valid_chunks]
+
+        data = None
+        for attempt in range(3):
+            try:
+                import time
+                time.sleep(0.3)
+                resp = self._session.post(
+                    self.API_URL,
+                    json={
+                        "model": self.MODEL,
+                        "query": query,
+                        "documents": documents,
+                        "top_n": min(top_n, len(documents)),
+                        "return_documents": False,
+                    },
+                    timeout=30,
+                )
+                if resp.status_code == 429:
+                    wait = int(resp.headers.get("Retry-After", 5))
+                    logger.warning(f"Jina rerank rate limited, waiting {wait}s")
+                    time.sleep(wait)
+                    continue
+                resp.raise_for_status()
+                data = resp.json()
+                break
+            except Exception as e:
+                if attempt < 2:
+                    logger.warning(f"Jina rerank attempt {attempt+1} failed: {e}")
+                    import time
+                    time.sleep(2)
+                else:
+                    logger.error(f"Jina rerank failed after 3 attempts: {e}")
+
+        # If all retries failed, return chunks without reranking
+        if data is None:
+            logger.warning("Jina rerank failed — returning chunks without reranking")
+            return [RankedChunk(
+                chunk_id=c.get("chunk_id", "unknown"),
+                document_name=c.get("document_name", "unknown"),
+                section_title=c.get("section_title", "unknown"),
+                page_number=c.get("page_number", "unknown"),
+                content=c.get("content") or c.get("text") or "",
+                vector_score=c.get("similarity", 0.0),
+                rerank_score=c.get("similarity", 0.0),
+            ) for c in valid_chunks[:top_n]]
+
+        ranked = []
+        for result in data.get("results", []):
+            idx = result.get("index", 0)
+            orig_idx = valid_indices[idx] if idx < len(valid_indices) else idx
+            score = result.get("relevance_score", 0.0)
+            chunk = chunks[orig_idx]
+            ranked.append(RankedChunk(
+                chunk_id=chunk.get("chunk_id", "unknown"),
+                document_name=chunk.get("document_name", "unknown"),
+                section_title=chunk.get("section_title", "unknown"),
+                page_number=chunk.get("page_number", "unknown"),
+                content=chunk.get("content") or chunk.get("text") or "",
+                vector_score=chunk.get("similarity", 0.0),
+                rerank_score=score,
+            ))
+
+        ranked.sort(key=lambda x: x.rerank_score, reverse=True)
+        logger.info(f"Jina v3.5 reranked {len(chunks)} -> {len(ranked)} chunks")
+        return ranked
+
+
+# ─── OpenRouter Reranker (SECONDARY) ────────────────────────────────────────
 class OpenRouterReranker:
     """
     Uses OpenRouter's free rerank API: nvidia/llama-nemotron-rerank-vl-1b-v2:free
@@ -293,21 +402,15 @@ class ClinicalReranker:
     Top-level reranker used by the CRAG orchestrator.
 
     Selection logic:
-        COHERE_API_KEY set → CohereReranker    (best quality, 100+ langs, Arabic+English)
+        JINA_API_KEY set → JinaReranker v3.5 (fastest, 131K context, multilingual)
+        COHERE_API_KEY set → CohereReranker (best quality, 100+ langs)
         OPENROUTER_API_KEY set → OpenRouterReranker (free, multilingual)
-        otherwise → LocalCrossEncoderReranker  (free, offline, English-optimized)
+        otherwise → LocalCrossEncoderReranker (free, offline)
 
     Args:
         rerank_threshold: Minimum rerank score to keep a chunk.
-                          Chunks below this are discarded even if the
-                          vector retriever returned them.
         top_n:            Maximum chunks to keep after reranking.
     """
-
-    # Sensible defaults tuned for clinical use:
-    # Local cross-encoder scores are logits (can be negative), so we use
-    # a relative top-n cut rather than a hard threshold for the local backend.
-    # For Cohere, scores are 0–1, so 0.5 is a good floor.
 
     def __init__(
         self,
@@ -317,17 +420,32 @@ class ClinicalReranker:
         self.top_n = top_n
         self.rerank_threshold = rerank_threshold
 
-        # Priority: Cohere (best) → OpenRouter (free) → Local (fallback)
-        if os.environ.get("COHERE_API_KEY"):
-            logger.info("Reranker backend: Cohere Rerank v3.5 (best quality)")
-            self._backend = CohereReranker()
-            if self.rerank_threshold is None:
-                self.rerank_threshold = 0.0
-        elif os.environ.get("OPENROUTER_API_KEY"):
-            logger.info("Reranker backend: OpenRouter (nvidia/llama-nemotron-rerank-vl-1b-v2, FREE)")
-            self._backend = OpenRouterReranker()
-            if self.rerank_threshold is None:
-                self.rerank_threshold = float("-inf")
+        # Priority: Jina (fastest) → Cohere (best) → OpenRouter (free) → Local
+        if os.environ.get("JINA_API_KEY"):
+            try:
+                logger.info("Reranker backend: Jina Reranker v3.5 (fastest, 131K context)")
+                self._backend = JinaReranker()
+                if self.rerank_threshold is None:
+                    self.rerank_threshold = 0.0
+            except Exception as e:
+                logger.warning(f"Jina reranker init failed: {e}, falling back")
+                self._backend = None
+        if not hasattr(self, '_backend') or self._backend is None:
+            if os.environ.get("COHERE_API_KEY"):
+                logger.info("Reranker backend: Cohere Rerank v3.5 (best quality)")
+                self._backend = CohereReranker()
+                if self.rerank_threshold is None:
+                    self.rerank_threshold = 0.0
+            elif os.environ.get("OPENROUTER_API_KEY"):
+                logger.info("Reranker backend: OpenRouter (nvidia/llama-nemotron-rerank-vl-1b-v2, FREE)")
+                self._backend = OpenRouterReranker()
+                if self.rerank_threshold is None:
+                    self.rerank_threshold = float("-inf")
+            else:
+                logger.info("Reranker backend: Local CrossEncoder (ms-marco-MiniLM-L-6-v2)")
+                self._backend = LocalCrossEncoderReranker()
+                if self.rerank_threshold is None:
+                    self.rerank_threshold = float("-inf")
         else:
             logger.info("Reranker backend: Local CrossEncoder (ms-marco-MiniLM-L-6-v2)")
             self._backend = LocalCrossEncoderReranker()
