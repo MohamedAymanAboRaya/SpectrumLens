@@ -1,8 +1,6 @@
 """
 SpectrumLens — OFFLINE Hackathon Demo (Bilingual Edition)
-=========================================================
-✅ No Supabase needed — runs fully from local JSON chunks
-✅ BAAI/bge-m3 (1024-dim, 100+ languages incl. Arabic) — free & local
+========================================================
 ✅ Arabic & English queries supported (cross-lingual retrieval)
 ✅ Evidence Panel shown BEFORE any LLM answer
 ✅ Precision@K table for judges
