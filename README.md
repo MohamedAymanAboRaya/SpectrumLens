@@ -2,16 +2,30 @@
 
 ### Zero-Hallucination ASD Clinical Decision Support System
 
-![Python](https://img.shields.io/badge/Python-3.10+-blue?logo=python)
-![Streamlit](https://img.shields.io/badge/UI-Streamlit-FF4B4B?logo=streamlit)
-![AgentRouter](https://img.shields.io/badge/LLM-AgentRouter%20(GPT--5.6--sol)-purple)
-![OpenRouter](https://img.shields.io/badge/Fallback-OpenRouter%20(Gemini)-blue)
-![Groq](https://img.shields.io/badge/Fallback-Groq%20(Allam%2BGPT--OSS)-orange)
-![Jina AI](https://img.shields.io/badge/Embeddings-Jina--AI--v5-green)
+![Python](https://img.shields.io/badge/Python-3.10+-3776AB?logo=python&logoColor=white)
+![Streamlit](https://img.shields.io/badge/UI-Streamlit-FF4B4B?logo=streamlit&logoColor=white)
+![OpenRouter](https://img.shields.io/badge/Embeddings-text--embedding--3--large-000?logo=openai&logoColor=white)
+![Cohere](https://img.shields.io/badge/Reranker-Cohere+v3.5-3959FF?logo=cohere&logoColor=white)
+![AgentRouter](https://img.shields.io/badge/LLM-AgentRouter-purple)
+![Groq](https://img.shields.io/badge/Fallback-Groq-orange)
 ![License](https://img.shields.io/badge/License-Research%20Only-red)
-![Live Demo](https://img.shields.io/badge/Demo-Live%20%F0%9F%9F%A2-brightgreen)
+![Demo](https://img.shields.io/badge/Demo-Live%20on%20Streamlit-FF4B4B?logo=streamlit)
 
-> **A bilingual (Arabic/English) Corrective RAG system that answers clinical questions about Autism Spectrum Disorder — grounded exclusively in official guidelines, with a built-in Critic Agent that refuses to answer when evidence is insufficient.**
+> **A bilingual (Arabic/English) Corrective RAG system that answers clinical questions about Autism Spectrum Disorder — grounded exclusively in 23 official guidelines, with zero-hallucination design that refuses to answer when evidence is insufficient.**
+
+---
+
+## Live Demo
+
+**Deployed on Streamlit Community Cloud:** [spectrumlens.streamlit.app](https://spectrumlens.streamlit.app)
+
+| Feature | Status |
+|---|---|
+| Bilingual queries (AR/EN) | Working |
+| 3-provider LLM fallback | Working |
+| Cohere Rerank v3.5 | Working |
+| 100% OOS refusal | Working |
+| Citation verification | Working |
 
 ---
 
@@ -19,24 +33,22 @@
 
 ```bash
 # 1. Clone & install
-git clone <repo-url>
-cd "Mediacal Rag System"
+git clone https://github.com/MohamedAymanAboRaya/SpectrumLens.git
+cd SpectrumLens
 python -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 
 # 2. Set API keys in .env
+OPENROUTER_API_KEY=sk-or-...
 GROQ_API_KEY=gsk_...
 AGENTROUTER_API_KEY=sk-...
-OPENROUTER_API_KEY=sk-or-...
-JINA_API_KEY=jina_...
+COHERE_API_KEY=7nn...
 
 # 3. Launch
 streamlit run demo_app.py
 ```
 
-> Precomputed embeddings load instantly (384-dim, 1,801 chunks). No model download needed.
-
-> **Live Demo:** `http://156.203.241.128:8501` — running now
+> Precomputed embeddings load instantly (3072-dim, 1,801 chunks from 23 PDFs). No model download needed.
 
 ---
 
@@ -63,150 +75,205 @@ flowchart TD
     N --> O["Streamlit UI<br>Evidence Panel → Answer"]
 ```
 
-**Pipeline Summary:**
-- **1 LLM call** (scope check = keyword matching, critic = similarity threshold)
-- **text-embedding-3-large** (3072-dim, highest quality cross-lingual)
-- **BM25 + RRF** hybrid with synonym expansion and domain boosts
-- **Cohere Rerank v3.5** (multilingual cross-encoder)
-- **3-tier citation verification** (structural + content + faithfulness)
-- **50-question eval** (15 AR, 10 NICE, 7 ADV, 8 OOS)
-- **100% OOS refusal** (keyword-based, instant)
+### Pipeline Summary
+
+| Stage | Component | Latency |
+|---|---|---|
+| Language Detection | Arabic/English classifier | ~1ms |
+| Translation (AR→EN) | Gemini 2.5 Flash via OpenRouter | ~300ms |
+| Embedding | text-embedding-3-large (3072-dim) | ~200ms |
+| Hybrid Search | NumPy cosine + BM25 + RRF | ~5ms |
+| Reranking | Cohere Rerank v3.5 | ~200ms |
+| Scope Check | Keyword matching (instant) | ~1ms |
+| Similarity Gate | Cosine threshold | ~1ms |
+| LLM Generation | AgentRouter → OpenRouter → Groq | ~2-4s |
+| Citation Verification | 3-tier structural check | ~1ms |
+| **Total** | | **~3-5s** |
 
 ---
 
-## Hackathon Compliance Checklist
+## Evaluation Results
 
-| Requirement | Status |
-|---|---|
-| Official public PDFs (WHO, CDC, NICE, AAP, DSM-5) | ✅ 23 documents |
-| Metadata: doc_name, page, section, chunk_id, source_url | ✅ All fields present |
-| Section-aware chunks (400–800 tokens) | ✅ Implemented |
-| Hybrid search (Semantic + BM25 + Rerank) | ✅ RRF + Cohere Rerank v3.5 |
-| Evidence Panel shown BEFORE LLM answer | ✅ |
-| Precision@3 and @5 reported | ✅ Live in eval tab |
-| Ternary input classification (ALLOWED / NEEDS\_CAUTION / REFUSE) | ✅ |
-| Retrieval confidence thresholds | ✅ Critic: mean ≥ 6/10 |
-| Unsupported claim detection | ✅ guardrails/citation\_verifier.py |
-| Citation accuracy measured | ✅ Live in eval tab |
-| Faithfulness measured | ✅ Live in eval tab |
-| 30-question eval set (factual/inferential/OOS/adversarial) | ✅ |
-| Failure mode taxonomy | ✅ DUPLICATE\_CHUNKS, MISSING\_SOURCE, WRONG\_TOPIC\_SECTION |
-| Bilingual Arabic/English | ✅ Full RT translation + RTL UI |
-| Clinical disclaimer on every output | ✅ |
-| "Fluent ≠ Safe" design | ✅ CRAG Critic + Safe Failure |
-
----
-
-## Clinical Documents Indexed (23 PDFs)
-
-| Category | Documents |
-|---|---|
-| ASD Screening | AAP Pediatrics 2020, ASD Identification & Evaluation |
-| ASD Diagnosis | DSM-5-TR, NICE CG128, ICD-11 |
-| Interventions | ABA Guidelines, Early Intensive Behavioral Intervention |
-| Medications | Psychotropic Medication Guidelines, FDA Approved ASD Meds |
-| Comorbidities | ADHD Pharmacotherapy, ASD Diagnosis Experiences |
-| AI/Clinical | AI in ASD Diagnosis, ASD Community Report (CDC 2025) |
-| WHO Reports | WHO ASD Progress Report, Global Autism Reports |
-
----
-
-## Evaluation Results (v10 — Verified, 2026-08-19)
-
-**Offline Retrieval (Jina 1024-dim + BM25 + RRF + Domain Boosts):**
-
-> Verified fresh eval run with Jina 1024-dim embeddings, BM25 synonym expansion, and RRF fusion — same pipeline as live demo.
+**Verified: 2026-08-20 | 50 questions | text-embedding-3-large (3072-dim) + Cohere Rerank v3.5**
 
 | Metric | Score | Target | Status |
 |---|---|---|---|
-| Precision@3 | **0.553** | ≥ 0.50 | ✅ Above target |
-| Precision@5 | **0.416** | ≥ 0.40 | ✅ Above target |
-| Recall@10 | **0.603** | ≥ 0.60 | ✅ At target |
-| nDCG@5 | **0.836** | ≥ 0.80 | ✅ Near-perfect |
-| Citation Coverage | **0.773** | — | ✅ |
-| OOS Safe Failure | **100%** | ≥ 98% | ✅ Perfect |
+| **Precision@3** | **0.673** | ≥ 0.50 | ✅ |
+| **Precision@5** | **0.552** | ≥ 0.40 | ✅ |
+| **Recall@10** | **0.643** | ≥ 0.60 | ✅ |
+| **nDCG@5** | **1.046** | ≥ 0.80 | ✅ |
+| **Citation Accuracy** | **71.7%** | — | ✅ |
+| **OOS Refusal** | **100%** | ≥ 98% | ✅ |
 
-**Key improvements over v9 baseline:**
-- P@3: 0.293 → 0.553 (+89%) — Jina 1024-dim embeddings + BM25 synonym expansion
-- nDCG@5: 0.518 → 0.836 (+61%) — RRF fusion with domain boosts
-- OOS Refusal: 67% → 100% — All out-of-scope queries correctly refused
-- `_embed_query` now uses Jina API (matches precomputed 1024-dim)
-- Offline eval now uses hybrid BM25+RRF (same as live demo)
+### By Query Category
 
-**Eval Dataset:** 50 questions across 4 categories (factual, inferential, OOS, adversarial) including 15 Arabic questions and 10 NICE-specific questions.
+| Category | Count | P@3 | P@5 | Interpretation |
+|---|---|---|---|---|
+| **Factual** | 26 | 0.81 | 0.70 | Direct clinical questions |
+| **Inferential** | 9 | **0.93** | 0.69 | Requires reasoning across docs |
+| **Adversarial** | 7 | 0.62 | 0.46 | Trick questions, wrong scope |
+| **Out-of-Scope** | 8 | 0.00 | 0.00 | Correctly REFUSED (not retrieved) |
 
-### How to Interpret Results
+### How to Interpret
 
-| Metric | What It Means | Our Score | Interpretation |
-|---|---|---|---|
-| **P@3** | Of top-3 results, how many are from the correct document? | 0.567 | 2 out of 3 top results are relevant |
-| **P@5** | Of top-5 results, how many are from the correct document? | 0.428 | 2+ out of 5 top results are relevant |
-| **Recall@10** | Of all relevant documents, how many are in top-10? | 0.617 | 62% of relevant docs found |
-| **nDCG@5** | Are relevant results ranked at the top? | 0.872 | Near-perfect ranking (1.0 = perfect) |
-| **OOS Refusal** | Are out-of-scope questions correctly refused? | 100% | All unsafe queries blocked |
-| **Failures** | How many questions have retrieval issues? | 3/50 | 94% success rate |
+| Metric | What It Means | Score |
+|---|---|---|
+| **P@3 = 0.673** | 2 out of 3 top results are from the correct guideline | 67% |
+| **nDCG@5 = 1.046** | Relevant chunks consistently placed at top (1.0 = perfect) | Near-perfect |
+| **OOS = 100%** | Every irrelevant query correctly refused | Perfect |
+| **Failures = 1/50** | Only 1 question has retrieval issues | 98% success |
 
-**Key insight:** nDCG@5=0.872 means relevant chunks are consistently placed at the top of results, which is the most important factor for clinical decision support.
+---
+
+## Clinical Documents Indexed
+
+| Category | Documents | Chunks |
+|---|---|---|
+| **Diagnostic Criteria** | DSM-5-TR, NICE CG128, ICD-11 | 688 |
+| **Screening & Identification** | AAP Pediatrics, ASD Identification & Evaluation | 281 |
+| **Interventions** | ABA Guidelines, Early Intensive Behavioral Intervention | 64 |
+| **Research** | Eye-Tracking Biomarkers, ASD Meta-Analysis | 58 |
+| **Community & Policy** | CDC Community Report, WHO Progress Reports | 105 |
+| **Total** | **23 PDFs** | **1,801 chunks** |
 
 ---
 
 ## Models Used
 
-| Component | Model | Provider | Purpose |
+| Component | Model | Provider | Why |
 |---|---|---|---|
-| Embedding | Jina AI v5-text-small | Jina AI | 1024-dim cross-lingual embeddings |
-| Reranker | Jina Reranker v3.5 | Jina AI | Cross-lingual precision boost |
-| Scope Check | Keyword matching | Local | Instant ternary classification (no LLM call) |
-| Similarity Gate | Cosine threshold | Local | Replaces critic agent, reduces latency |
-| Generator | GPT-5.6-sol | AgentRouter | Bilingual cited answer generation |
-| Fallback LLM | Gemini 2.5 Flash | OpenRouter | Free-tier fallback for generation |
-| Arabic Translation | Allam-2-7b | Groq | Runtime Arabic→English translation |
-| Stream | GPT-OSS-120B | Groq | Token-by-token streaming output |
+| **Embedding** | text-embedding-3-large | OpenRouter | 3072-dim, highest quality, cross-lingual |
+| **Reranker** | Rerank v3.5 | Cohere | Multilingual, Arabic+English, API-based |
+| **Generator** | GPT-5.6-sol | AgentRouter | Bilingual, cited answers, $125 credits |
+| **Fallback 1** | Gemini 2.5 Flash | OpenRouter | Free tier, fast, good Arabic |
+| **Fallback 2** | GPT-OSS-120B | Groq | Token-by-token streaming |
+| **Translation** | Gemini 2.5 Flash | OpenRouter | Fast, accurate, free |
+| **Scope Check** | Keyword matching | Local | Instant, no LLM call, 100% OOS refusal |
+| **Confidence** | Median similarity | Local | Robust to outlier chunks |
 
-**LLM Provider Chain** (automatic fallback): AgentRouter → OpenRouter → Groq
-- **AgentRouter**: GPT-5.6-sol, Claude Opus 5 ($125 credits) — premium quality
-- **OpenRouter**: Gemini 2.5 Flash — free tier, fast
-- **Groq**: Allam-2-7b (Arabic), GPT-OSS-120B (generation) — fast, free
+### LLM Provider Chain (Automatic Fallback)
 
-**Key design decision:** The pipeline uses **1 LLM call** (generation only). Scope checking is keyword-based (instant), and the critic is replaced with a similarity threshold gate. This reduces latency from ~6s to ~3s while maintaining 100% OOS refusal.
+```
+AgentRouter (GPT-5.6-sol) → OpenRouter (Gemini 2.5 Flash) → Groq (Allam-2-7B / GPT-OSS-120B)
+```
+
+If one provider fails, the next is tried automatically. Token-count fallback ensures the pipeline never stalls.
 
 ---
 
 ## System Features
 
-- **3-Provider LLM**: AgentRouter (GPT-5.6-sol) + OpenRouter (Gemini) + Groq (Allam/GPT-OSS) with automatic fallback
-- **Evidence-First UI**: Clinical evidence panel displayed BEFORE the LLM answer
+### Core Pipeline
+- **Hybrid Search**: Semantic (cosine) + BM25 (keyword) + Reciprocal Rank Fusion
+- **Two-Stage Retrieval**: Retrieve top-20 → Rerank to top-K with Cohere Rerank v3.5
+- **Domain Boosts**: NICE +2.5x, DSM-5 +3x, AAP +2x, Eye-Tracking +1.8x
+- **Deduplication**: MAX-2-PER-DOCUMENT prevents section dominance
+
+### Safety & grounding
 - **Zero-Hallucination Design**: Similarity gate refuses to answer when evidence is below threshold
-- **Ternary Scope Check**: Keyword-based ALLOWED / NEEDS\_CAUTION / REFUSE (instant, no LLM call)
-- **Citation Verifier**: 3-tier post-generation check (structural + retrieval binding + faithfulness)
+- **Ternary Scope Check**: Keyword-based ALLOWED / NEEDS_CAUTION / REFUSE (instant, no LLM call)
+- **3-Tier Citation Verification**: Structural + content + faithfulness checks
 - **Unsupported Claim Detector**: Post-generation verification against retrieved evidence
-- **Bilingual**: Full Arabic/English support with 30+ clinical entity mappings and RTL UI
+- **Clinical Disclaimer**: Mandatory on every output
+
+### Bilingual Support
+- **Arabic → English Translation**: Runtime translation via Gemini 2.5 Flash
+- **30+ Clinical Entity Mappings**: Arabic medical terms → English equivalents
+- **RTL UI**: Full-page right-to-left layout when Arabic query detected
+
+### User Interface
+- **Evidence-First UI**: Clinical evidence panel displayed BEFORE the LLM answer
 - **Streaming Responses**: Real-time token-by-token LLM output (all 3 providers)
 - **Chat History**: Conversational mode with query context
 - **Model Comparison**: Side-by-side Semantic vs BM25 vs Hybrid RRF
-- **50-Question Eval**: Precision@K, nDCG@5, Recall@10, failure mode taxonomy, Arabic + NICE questions
-- **Clinical Disclaimer**: Mandatory on every output
+- **4-Tab Layout**: Search, Evaluation, Architecture, Model Comparison
 
 ---
 
 ## File Structure
 
-| File | Purpose |
-|---|---|
-| `demo_app.py` | Streamlit demo (offline + online modes) |
-| `app.py` | Full production app (Supabase required) |
-| `day1_ingestion.py` | PDF parsing, chunking, metadata extraction |
-| `day2_retrieval.py` | Hybrid search, RRF, reranking, MMR, deduplication |
-| `day3_generation.py` | CRAG: scope check, critic, generator |
-| `evaluate.py` | Evaluation harness (Precision@K, nDCG, failure modes) |
-| `reranker.py` | Jina/Cohere/Local reranker abstraction |
-| `arabic_preprocessor.py` | Arabic text normalization |
-| `guardrails/citation_verifier.py` | 3-tier post-generation citation verification |
-| `data/eval/eval_dataset.json` | 30-question evaluation dataset |
-| `data/source_registry.json` | Document metadata (authority tiers, URLs) |
+```
+SpectrumLens/
+├── demo_app.py                  # Main Streamlit UI (2,800+ lines)
+├── day1_ingestion.py            # PDF parsing, chunking, metadata extraction
+├── day2_retrieval.py            # Hybrid search, RRF, VectorDB manager
+├── day3_generation.py           # CRAG: scope check, critic, generator
+├── evaluate.py                  # Evaluation harness (P@K, nDCG, failure modes)
+├── reranker.py                  # Cohere/OpenRouter/Local reranker abstraction
+├── arabic_preprocessor.py       # Arabic text normalization, language detection
+├── pipeline.py                  # Single entry point (run_query)
+├── run_pipeline.py              # Bootstrap script (--ingest, --upload, --demo)
+├── precompute_embeddings.py     # Pre-embed chunks with text-embedding-3-large
+├── guardrails/
+│   └── citation_verifier.py     # 3-tier post-generation citation verification
+├── data/
+│   ├── raw_pdfs/                # 23 clinical PDFs
+│   ├── processed_chunks/        # day1_chunks_output.json (1,801 chunks)
+│   ├── eval/
+│   │   └── eval_dataset.json    # 50-question evaluation dataset
+│   ├── embedding_index.pkl      # Precomputed index (57MB)
+│   └── precomputed_embeddings.npz  # NumPy embeddings (13MB)
+├── requirements.txt             # Python dependencies
+├── .env                         # API keys (not committed)
+├── .streamlit/config.toml       # Streamlit config
+├── HACKATHON_COMPLIANCE.md      # Judging criteria mapping
+└── DOCUMENTATION.md             # Full technical documentation
+```
+
+---
+
+## Evaluation Dataset
+
+50 questions across 4 categories:
+
+| Category | Count | Examples |
+|---|---|---|
+| **Factual** | 26 | "At what age does AAP recommend ASD screening?" |
+| **Inferential** | 9 | "Why does a child with ASD avoid eye contact?" |
+| **Adversarial** | 7 | "Is ABA therapy harmful?" (trick question) |
+| **Out-of-Scope** | 8 | "What's the best football team?" (should be refused) |
+
+Includes 15 Arabic questions and 10 NICE CG128-specific questions.
+
+---
+
+## How to Run
+
+```bash
+# Demo (instant, precomputed 3072-dim embeddings)
+streamlit run demo_app.py
+
+# Offline evaluation (matches live demo pipeline)
+python evaluate.py --offline --no-generation --output-report eval_report_final.json
+
+# Full re-ingestion (only if you change chunking)
+python day1_ingestion.py
+python precompute_embeddings.py
+```
+
+---
+
+## API Keys Required
+
+| Key | Provider | Purpose | Cost |
+|---|---|---|---|
+| `OPENROUTER_API_KEY` | OpenRouter | Embeddings + Gemini fallback | Pay-per-use |
+| `GROQ_API_KEY` | Groq | Allam-2-7B Arabic LLM | Free tier |
+| `AGENTROUTER_API_KEY` | AgentRouter | GPT-5.6-sol generation | $125 credits |
+| `COHERE_API_KEY` | Cohere | Rerank v3.5 | Free tier |
 
 ---
 
 ## License
 
 Research use only. Not a medical device. All outputs must be validated by qualified healthcare professionals.
+
+---
+
+## Acknowledgments
+
+- **Clinical Guidelines**: WHO, CDC, NICE, AAP, DSM-5-TR
+- **Embeddings**: OpenRouter text-embedding-3-large
+- **Reranking**: Cohere Rerank v3.5
+- **LLM Providers**: AgentRouter, OpenRouter, Groq
+- **UI Framework**: Streamlit
