@@ -44,29 +44,30 @@ streamlit run demo_app.py
 
 ```mermaid
 flowchart TD
-    A["User Query\n(Arabic or English)"] --> B{Language\nDetect}
-    B -->|Arabic| C["Arabic → English\nRuntime Translation\n(Allam-2-7B / Groq)"]
-    B -->|English| D["Medical Acronym\nExpansion"]
+    A["User Query<br>(Arabic or English)"] --> B{"Language<br>Detect"}
+    B -->|Arabic| C["Arabic → English<br>Runtime Translation<br>(Gemini 2.5 Flash)"]
+    B -->|English| D["Medical Acronym<br>Expansion"]
     C --> D
-    D --> E["Jina AI v5\n1024-dim Embed"]
-    E --> F["Hybrid Search\nSemantic + BM25 + RRF\n+ Domain Boosts"]
-    F --> G["Section + Content\nKeyword Boosts\n+ MAX-2-PER-DOC"]
-    G --> H["Jina Reranker v3.5\n→ Top 5 Chunks"]
-    H --> I{Keyword Scope Check\n(Instant, No LLM)}
-    I -->|REFUSE| J["⛔ Safe Failure\nNo answer given"]
-    I -->|ALLOWED| K{Similarity Gate\nThreshold: 0.25}
+    D --> E["text-embedding-3-large<br>3072-dim Embed"]
+    E --> F["Hybrid Search<br>Semantic + BM25 + RRF<br>+ Domain Boosts"]
+    F --> G["Section + Content<br>Keyword Boosts<br>+ MAX-2-PER-DOC"]
+    G --> H["Cohere Rerank v3.5<br>→ Top 5 Chunks"]
+    H --> I{"Keyword Scope Check<br>(Instant, No LLM)"}
+    I -->|REFUSE| J["Safe Failure<br>No answer given"]
+    I -->|ALLOWED| K{"Similarity Gate<br>Threshold: 0.25"}
     I -->|NEEDS_CAUTION| K
     K -->|LOW| J
-    K -->|OK| L["Generator\nAgentRouter → OpenRouter → Groq\nBilingual cited answer"]
-    L --> M["3-Tier Citation Verifier\nguardrails/citation_verifier.py"]
-    M --> N["Unsupported Claim\nDetector"]
-    N --> O["Streamlit UI\nEvidence Panel → Answer"]
+    K -->|OK| L["Generator<br>AgentRouter → OpenRouter → Groq<br>Bilingual cited answer"]
+    L --> M["3-Tier Citation Verifier<br>guardrails/citation_verifier.py"]
+    M --> N["Unsupported Claim<br>Detector"]
+    N --> O["Streamlit UI<br>Evidence Panel → Answer"]
 ```
 
 **Pipeline Summary:**
 - **1 LLM call** (scope check = keyword matching, critic = similarity threshold)
-- **Jina 1024-dim** embeddings (rebuilt `precomputed_embeddings.npz`)
+- **text-embedding-3-large** (3072-dim, highest quality cross-lingual)
 - **BM25 + RRF** hybrid with synonym expansion and domain boosts
+- **Cohere Rerank v3.5** (multilingual cross-encoder)
 - **3-tier citation verification** (structural + content + faithfulness)
 - **50-question eval** (15 AR, 10 NICE, 7 ADV, 8 OOS)
 - **100% OOS refusal** (keyword-based, instant)
@@ -80,7 +81,7 @@ flowchart TD
 | Official public PDFs (WHO, CDC, NICE, AAP, DSM-5) | ✅ 23 documents |
 | Metadata: doc_name, page, section, chunk_id, source_url | ✅ All fields present |
 | Section-aware chunks (400–800 tokens) | ✅ Implemented |
-| Hybrid search (Semantic + BM25 + Rerank) | ✅ RRF + Jina Reranker v3.5 |
+| Hybrid search (Semantic + BM25 + Rerank) | ✅ RRF + Cohere Rerank v3.5 |
 | Evidence Panel shown BEFORE LLM answer | ✅ |
 | Precision@3 and @5 reported | ✅ Live in eval tab |
 | Ternary input classification (ALLOWED / NEEDS\_CAUTION / REFUSE) | ✅ |
